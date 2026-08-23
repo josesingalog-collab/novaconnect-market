@@ -32,7 +32,7 @@ const eslintConfig = defineConfig([
   {
     // Sécurité : process.env accessible uniquement dans les modules de configuration.
     files: ["**/*.ts", "**/*.tsx"],
-    ignores: ["lib/env.ts", "lib/config.ts", "next.config.ts", "vitest.config.ts"],
+    ignores: ["lib/env.ts", "lib/config.ts", "next.config.ts", "vitest.config.mts", "tests/**"],
     rules: {
       "no-restricted-syntax": [
         "error",
