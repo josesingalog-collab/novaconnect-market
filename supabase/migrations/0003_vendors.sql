@@ -43,7 +43,10 @@ begin
   jwt_role := coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '');
 
   if new.status is distinct from old.status or new.commission_rate_bps is distinct from old.commission_rate_bps then
-    if jwt_role <> 'service_role' and current_user not in ('postgres', 'supabase_admin') then
+    -- Voir garde profils : comparaison current_user = session_user obligatoire
+    -- car security definer fait passer current_user pour postgres.
+    if jwt_role <> 'service_role'
+       and not (current_user = session_user and current_user in ('postgres', 'supabase_admin')) then
       raise exception 'Seule l''administration peut modifier le statut ou la commission d''une boutique';
     end if;
   end if;

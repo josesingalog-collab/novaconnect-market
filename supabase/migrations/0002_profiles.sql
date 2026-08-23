@@ -67,7 +67,11 @@ begin
   jwt_role := coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '');
 
   if new.role is distinct from old.role or new.status is distinct from old.status then
-    if jwt_role <> 'service_role' and current_user not in ('postgres', 'supabase_admin') then
+    -- NB : en security definer, current_user vaut TOUJOURS le propriétaire
+    -- (postgres). On compare donc aussi session_user : égalité uniquement
+    -- pour une vraie session SQL Editor, pas pour une requête API élevée.
+    if jwt_role <> 'service_role'
+       and not (current_user = session_user and current_user in ('postgres', 'supabase_admin')) then
       raise exception 'Modification du role ou du statut du profil interdite via cette voie';
     end if;
   end if;
@@ -97,8 +101,11 @@ as $$
   );
 $$;
 
-revoke all on function public.is_admin() from public, anon, authenticated;
-grant execute on function public.is_admin() to authenticated, service_role;
+revoke all on function public.is_admin() from public;
+-- anon DOIT pouvoir évaluer is_admin() : les policies de lecture publique du
+-- catalogue l'appellent. Pour anon, auth.uid() vaut NULL -> retourne false,
+-- aucun contournement possible.
+grant execute on function public.is_admin() to anon, authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- Policies RLS profils

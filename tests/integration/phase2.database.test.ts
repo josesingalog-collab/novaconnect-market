@@ -45,6 +45,7 @@ let buyer: SupabaseClient;
 let vendorA: SupabaseClient;
 let vendorB: SupabaseClient;
 let buyerId = "";
+let vendorAId = "";
 let shopAId = "";
 let productAId = "";
 let orderId = "";
@@ -52,7 +53,7 @@ let orderItemId = "";
 let paymentId = "";
 
 async function makeUser(fullName: string): Promise<{ user: User; client: SupabaseClient }> {
-  const email = `${fullName.toLowerCase()}.${suffix}@test-nova.local`;
+  const email = `${fullName.toLowerCase()}.${suffix}@example.com`;
   const { data, error } = await service.auth.admin.createUser({
     email,
     password: PASSWORD,
@@ -85,6 +86,7 @@ beforeAll(async () => {
 
   const a = await makeUser(`VendeurA${suffix}`);
   vendorA = a.client;
+  vendorAId = a.user.id;
 
   const bb = await makeUser(`VendeurB${suffix}`);
   vendorB = bb.client;
@@ -144,6 +146,7 @@ describe("Phase 2 — Vendeurs & isolation RLS", () => {
     const { data, error } = await vendorA
       .from("vendors")
       .insert({
+        user_id: vendorAId,
         store_name: `Boutique A ${suffix}`,
         slug: `boutique-a-${suffix}`,
         description: "Boutique de test A",
@@ -158,6 +161,7 @@ describe("Phase 2 — Vendeurs & isolation RLS", () => {
 
   it("refuse une seconde boutique pour le même utilisateur", async () => {
     const { error } = await vendorA.from("vendors").insert({
+      user_id: vendorAId,
       store_name: `Doublon ${suffix}`,
       slug: `doublon-${suffix}`,
     });
@@ -239,7 +243,7 @@ describe("Phase 2 — Produits & transitions", () => {
       .eq("id", productAId)
       .single();
     expect(data?.id).toBe(productAId);
-    expect(data?.price).toBe("100.00");
+    expect(Number(data?.price)).toBe(100);
   });
 });
 
@@ -303,7 +307,7 @@ describe("Phase 2 — Commande, paiement idempotent, ledger, soldes", () => {
       .eq("id", orderId)
       .single();
     expect(order?.status).toBe("PAID");
-    expect(order?.platform_fee).toBe("10.00");
+    expect(Number(order?.platform_fee)).toBe(10);
     expect(order?.paid_at).not.toBeNull();
   });
 
@@ -342,9 +346,9 @@ describe("Phase 2 — Commande, paiement idempotent, ledger, soldes", () => {
     const usd = (data as Array<Record<string, unknown>>)?.find(
       (row) => row["currency"] === "USD",
     );
-    expect(usd?.["accounting_balance"]).toBe("90.00");
-    expect(usd?.["reserved_amount"]).toBe("0.00");
-    expect(usd?.["available_balance"]).toBe("90.00");
+    expect(Number(usd?.["accounting_balance"])).toBe(90);
+    expect(Number(usd?.["reserved_amount"])).toBe(0);
+    expect(Number(usd?.["available_balance"])).toBe(90);
   });
 });
 
@@ -374,13 +378,14 @@ describe("Phase 2 — Retraits : réservation atomique", () => {
 
     const { data: bal } = await vendorA.rpc("get_my_vendor_balances");
     const usd = (bal as Array<Record<string, unknown>>)?.find((r) => r["currency"] === "USD");
-    expect(usd?.["reserved_amount"]).toBe("85.00");
-    expect(usd?.["available_balance"]).toBe("5.00");
+    expect(Number(usd?.["reserved_amount"])).toBe(85);
+    expect(Number(usd?.["available_balance"])).toBe(5);
 
-    // Double dépassement impossible : il ne reste que 5 $
+    // Double dépassement impossible : il ne reste que 5 $.
+    // Montant >= seuil minimum (20 $) pour viser le contrôle de solde.
     const { error: e2 } = await vendorA.rpc("request_withdrawal", {
       p_currency: "USD",
-      p_amount: "10.00",
+      p_amount: "30.00",
       p_method: "mobile_money",
       p_payout: PAYOUT,
     });
@@ -432,11 +437,11 @@ describe("Phase 2 — Retraits : réservation atomique", () => {
       .eq("withdrawal_id", withdrawalId);
 
     expect(debitsAfter.count).toBe(debitsBefore.count === 0 ? 1 : debitsAfter.count);
-    expect(debitsAfter.data?.[0]?.amount).toBe("-85.00");
+    expect(Number(debitsAfter.data?.[0]?.amount)).toBe(-85);
 
     const { data: bal } = await vendorA.rpc("get_my_vendor_balances");
     const usd = (bal as Array<Record<string, unknown>>)?.find((r) => r["currency"] === "USD");
-    expect(usd?.["available_balance"]).toBe("5.00");
+    expect(Number(usd?.["available_balance"])).toBe(5);
   });
 
   it("désactive proprement la devise CDF (aucun taux inventé)", async () => {

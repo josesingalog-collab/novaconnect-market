@@ -92,7 +92,10 @@ declare
 begin
   jwt_role := coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '');
 
-  if jwt_role = 'service_role' or current_user in ('postgres', 'supabase_admin') then
+  -- Voir garde profils : security definer fait passer current_user pour
+  -- postgres ; exiger aussi current_user = session_user pour la sortie early.
+  if jwt_role = 'service_role'
+     or (current_user = session_user and current_user in ('postgres', 'supabase_admin')) then
     return new;
   end if;
 

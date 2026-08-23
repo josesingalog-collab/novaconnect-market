@@ -160,7 +160,11 @@ begin
   jwt_role := coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '');
 
   if new.role is distinct from old.role or new.status is distinct from old.status then
-    if jwt_role <> 'service_role' and current_user not in ('postgres', 'supabase_admin') then
+    -- NB : en security definer, current_user vaut TOUJOURS le propriétaire
+    -- (postgres). On compare donc aussi session_user : égalité uniquement
+    -- pour une vraie session SQL Editor, pas pour une requête API élevée.
+    if jwt_role <> 'service_role'
+       and not (current_user = session_user and current_user in ('postgres', 'supabase_admin')) then
       raise exception 'Modification du role ou du statut du profil interdite via cette voie';
     end if;
   end if;
@@ -191,8 +195,11 @@ as $$
   );
 $$;
 
-revoke all on function public.is_admin() from public, anon, authenticated;
-grant execute on function public.is_admin() to authenticated, service_role;
+revoke all on function public.is_admin() from public;
+-- anon DOIT pouvoir évaluer is_admin() : les policies de lecture publique du
+-- catalogue l'appellent. Pour anon, auth.uid() vaut NULL -> retourne false,
+-- aucun contournement possible.
+grant execute on function public.is_admin() to anon, authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
 -- Policies RLS profils
@@ -256,7 +263,10 @@ begin
   jwt_role := coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '');
 
   if new.status is distinct from old.status or new.commission_rate_bps is distinct from old.commission_rate_bps then
-    if jwt_role <> 'service_role' and current_user not in ('postgres', 'supabase_admin') then
+    -- Voir garde profils : comparaison current_user = session_user obligatoire
+    -- car security definer fait passer current_user pour postgres.
+    if jwt_role <> 'service_role'
+       and not (current_user = session_user and current_user in ('postgres', 'supabase_admin')) then
       raise exception 'Seule l''administration peut modifier le statut ou la commission d''une boutique';
     end if;
   end if;
@@ -395,7 +405,10 @@ declare
 begin
   jwt_role := coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '');
 
-  if jwt_role = 'service_role' or current_user in ('postgres', 'supabase_admin') then
+  -- Voir garde profils : security definer fait passer current_user pour
+  -- postgres ; exiger aussi current_user = session_user pour la sortie early.
+  if jwt_role = 'service_role'
+     or (current_user = session_user and current_user in ('postgres', 'supabase_admin')) then
     return new;
   end if;
 
@@ -814,32 +827,15 @@ create trigger trg_ledger_immutable
   for each row execute function public.guard_ledger_immutable();
 
 -- ---------------------------------------------------------------------------
--- GARDE retraits : seul postgres/service peut changer un statut ;
--- montant, devise et vendeur sont figés après création.
--- ---------------------------------------------------------------------------
-create or replace function public.guard_withdrawals()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  jwt_role text;
-begin
-  jwt_role := coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '');
-
-  if jwt_role = 'service_role' or current_user in ('postgres', 'supabase_admin') then
-    return new;
-  end if;
-
-  raise exception 'Les retraits sont geres uniquement par le serveur';
-end;
-$$;
-
+-- NB : PAS de garde trigger sur withdrawals. La table n'expose AUCUNE policy
+-- d'écriture : le RLS interdit déjà toute écriture directe aux clients, et
+-- les seules écritures légitimes passent par les fonctions security definer
+-- ci-dessous. Un garde en definer ne pourrait pas distinguer un appel RPC
+-- légitime d'une écriture directe et bloquerait cancel_my_withdrawal.
+--
+-- Nettoyage défensif pour les bases où une version antérieure l'aurait créé :
 drop trigger if exists trg_withdrawals_guard on public.withdrawals;
-create trigger trg_withdrawals_guard
-  before update on public.withdrawals
-  for each row execute function public.guard_withdrawals();
+drop function if exists public.guard_withdrawals();
 
 -- Débit automatique et IDEMPOTENT quand un retrait passe à PAID.
 create or replace function public.ledger_on_withdrawal_paid()
@@ -993,7 +989,9 @@ begin
     raise exception 'Retraits indisponibles pour cette devise';
   end if;
 
-  v_min := (v_cfg ->> p_currency)::numeric(18,2);
+  -- app_settings stocke le seuil en UNITÉS MINOR (ex. 2000 = 20,00 USD).
+  -- La RPC reçoit des unités MAJEURES : convertir avant comparaison.
+  v_min := ((v_cfg ->> p_currency)::numeric / 100);
 
   if p_amount < v_min then
     raise exception 'Montant minimum de retrait : % ', v_min;

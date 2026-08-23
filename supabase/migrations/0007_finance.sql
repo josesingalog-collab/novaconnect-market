@@ -92,31 +92,15 @@ create trigger trg_ledger_immutable
   for each row execute function public.guard_ledger_immutable();
 
 -- ---------------------------------------------------------------------------
--- GARDE retraits : seul postgres/service peut changer un statut ;
--- montant, devise et vendeur sont figés après création.
--- ---------------------------------------------------------------------------
-create or replace function public.guard_withdrawals()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  jwt_role text;
-begin
-  jwt_role := coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '');
-
-  if jwt_role = 'service_role' or current_user in ('postgres', 'supabase_admin') then
-    return new;
-  end if;
-
-  raise exception 'Les retraits sont geres uniquement par le serveur';
-end;
-$$;
-
-create trigger trg_withdrawals_guard
-  before update on public.withdrawals
-  for each row execute function public.guard_withdrawals();
+-- NB : PAS de garde trigger sur withdrawals. La table n'expose AUCUNE policy
+-- d'écriture : le RLS interdit déjà toute écriture directe aux clients, et
+-- les seules écritures légitimes passent par les fonctions security definer
+-- ci-dessous. Un garde en definer ne pourrait pas distinguer un appel RPC
+-- légitime d'une écriture directe et bloquerait cancel_my_withdrawal.
+--
+-- Nettoyage défensif pour les bases où une version antérieure l'aurait créé :
+drop trigger if exists trg_withdrawals_guard on public.withdrawals;
+drop function if exists public.guard_withdrawals();
 
 -- Débit automatique et IDEMPOTENT quand un retrait passe à PAID.
 create or replace function public.ledger_on_withdrawal_paid()
@@ -269,7 +253,9 @@ begin
     raise exception 'Retraits indisponibles pour cette devise';
   end if;
 
-  v_min := (v_cfg ->> p_currency)::numeric(18,2);
+  -- app_settings stocke le seuil en UNITÉS MINOR (ex. 2000 = 20,00 USD).
+  -- La RPC reçoit des unités MAJEURES : convertir avant comparaison.
+  v_min := ((v_cfg ->> p_currency)::numeric / 100);
 
   if p_amount < v_min then
     raise exception 'Montant minimum de retrait : % ', v_min;
