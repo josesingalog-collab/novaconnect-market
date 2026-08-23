@@ -90,11 +90,46 @@ export default async function DashboardPage() {
         </section>
       )}
 
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+        <h2 className="mb-3 text-sm font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
+          Mes espaces
+        </h2>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/dashboard/profil"
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Mon profil
+          </Link>
+          <Link
+            href="/dashboard/mot-de-passe"
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Mot de passe
+          </Link>
+          {profile?.role === "VENDOR" && (
+            <Link
+              href="/vendor"
+              className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            >
+              Espace vendeur
+            </Link>
+          )}
+          {profile?.role === "ADMIN" && (
+            <Link
+              href="/admin"
+              className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            >
+              Console admin
+            </Link>
+          )}
+        </div>
+      </section>
+
       <section className="rounded-xl border border-dashed border-zinc-300 p-6 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
         <p className="font-medium text-zinc-800 dark:text-zinc-200">Prochaines phases</p>
         <ul className="mt-2 list-inside list-disc space-y-1">
-          <li>Phase 3 : catalogue public et fiches produit</li>
-          <li>Phase 5 : création de boutique vendeur (rôle VENDOR)</li>
+          <li>Phase 5 : création de boutique vendeur et catalogue</li>
           <li>Phase 6+ : panier, commandes et paiements</li>
         </ul>
         <Link href="/" className="mt-4 inline-block font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100">

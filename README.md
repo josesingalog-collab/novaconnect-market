@@ -51,8 +51,8 @@ docs/           architecture.md · decisions.md · database.md…
 ## Statut du projet (V1)
 
 - [x] **Phase 1** — Fondations (Next.js strict, config, money system, clients Supabase)
-- [ ] Phase 2 — Schéma DB, migrations, RLS
-- [ ] Phase 3 — Auth + profils + rôles
+- [x] **Phase 2** — Schéma DB, migrations, RLS
+- [x] **Phase 3** — Auth + profils + rôles
 - [ ] Phase 4 — Marketplace publique
 - [ ] Phase 5 — Espace vendeur
 - [ ] Phase 6 — Panier + commandes

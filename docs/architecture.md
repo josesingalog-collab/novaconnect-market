@@ -10,7 +10,7 @@ Next.js App Router ── Server Actions · Route Handlers
    lib/ (config, env, money, supabase clients)  ← fondations partagées
    services/ (logique métier par domaine)
         │
-Supabase : PostgreSQL + RLS + Auth          Storage PRIVÉ (product-files)
+Supabase : PostgreSQL + RLS + Auth          Storage : product-files PRIVÉ · avatars PUBLIC
         ▲
 Provider de paiement (interface PaymentProvider → Mock en V1)
         └── webhook signé = SEULE source de vérité d'un paiement réussi
@@ -58,6 +58,32 @@ Checkout serveur → recalcul total (jamais confiance client)
   → RPC atomique : order PAID + ledger vendeurs crédités + audit
   → droit de téléchargement actif (dérivé de order_items PAID)
 ```
+
+## Profils, rôles & espaces (Phase 3)
+
+### Modèle
+- `profiles` : `full_name`, `phone`, `avatar_url`, `role` (BUYER/VENDOR/ADMIN), `status` (ACTIVE/SUSPENDED) ;
+- création auto par trigger `handle_new_user` (rôle BUYER) ; promotion = SQL manuel uniquement (invariant 6) ;
+- garde PostgreSQL (`security definer` + test `current_user = session_user`) : aucun client ne peut modifier `role`/`status`.
+
+### Accès au profil côté serveur
+- `lib/profile.ts` → `getCurrentProfile()` : union discriminée pure (`unauthenticated` / `missing-profile` / `ok`), client anon + RLS, aucune navigation intégrée.
+- `lib/guards.ts` → `requireRole(role, nextPath)` : revalidation serveur dans les layouts `/vendor` et `/admin` ; rôle absent ou compte SUSPENDED → redirection `/dashboard`.
+
+### Édition du profil (`/dashboard/profil`)
+- Schéma Zod (`schemas/profile.ts`) puis action serveur : payload limité à `full_name`/`phone`/`avatar_url` — `role`/`status` n'y figurent jamais (double protection RLS + garde SQL).
+
+### Avatar (bucket Storage PUBLIC `avatars`)
+- Chemin fixe `<user_id>/avatar.<ext>` avec **upsert** : remplacement, jamais de doublon ;
+- type vérifié par **signature binaire** JPEG/PNG/WebP (le `type` du navigateur est falsifiable), taille ≤ 2 Mo ;
+- policies Storage : lecture publique du bucket ; écriture limitée à `(storage.foldername(name))[1] = auth.uid()::text` ;
+- URL publique enregistrée dans `profiles.avatar_url` via UPDATE RLS.
+
+### Changement de mot de passe (`/dashboard/mot-de-passe`)
+- Action serveur → `auth.updateUser({ password })` avec le client à session cookie ; zéro service-role, aucune donnée métier. La session reste valide.
+
+### Défense en profondeur des espaces rôles
+`proxy.ts` (barrière UX) → layout serveur `requireRole` (profil réel via RLS) → policies PostgreSQL.
 
 ## Phases
 
