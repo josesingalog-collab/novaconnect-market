@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { logoutAction } from "@/app/actions/auth";
+import { CartBadge } from "@/components/cart/cart-badge";
 import { getCurrentProfile } from "@/lib/profile";
 import { APP_NAME } from "@/lib/config";
 
@@ -40,6 +41,7 @@ export async function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
+          <CartBadge />
           {connected ? (
             <>
               {current.profile.role === "VENDOR" && (
@@ -88,6 +90,10 @@ export async function SiteHeader() {
             ☰
           </summary>
           <div className="absolute right-0 top-11 flex w-56 flex-col gap-1 rounded-xl border border-zinc-200 bg-white p-3 shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
+            <Link href="/panier" className={`rounded-lg px-2 py-1.5 ${LINK_CLASS}`}>
+              🛒 Panier
+            </Link>
+            <hr className="my-1 border-zinc-200 dark:border-zinc-800" />
             {NAV_LINKS.map((link) => (
               <Link key={link.href} href={link.href} className={`rounded-lg px-2 py-1.5 ${LINK_CLASS}`}>
                 {link.label}

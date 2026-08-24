@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { formatPrice } from "@/components/marketplace/format";
 import { APP_NAME } from "@/lib/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -97,20 +98,18 @@ export default async function ProductPage({ params }: PageProps) {
             </Link>
           </div>
 
-          {/* Placeholder Phase 6 — panier & paiement */}
-          <div className="mt-2 rounded-xl border border-dashed border-zinc-300 p-4 dark:border-zinc-700">
-            <button
-              type="button"
-              disabled
-              aria-disabled
-              className="w-full cursor-not-allowed rounded-lg bg-zinc-200 px-6 py-3 text-sm font-semibold text-zinc-500 dark:bg-zinc-800 dark:text-zinc-500"
-            >
-              Acheter — bientôt disponible
-            </button>
-            <p className="mt-2 text-center text-xs text-zinc-500 dark:text-zinc-400">
-              Panier et paiement mobile money arrivent à la Phase 6.
-            </p>
-          </div>
+          {/* Ajout panier (Phase 6) — quantité unique, re-pricing serveur au checkout */}
+          <AddToCartButton
+            product={{
+              productId: product.id,
+              slug: product.slug,
+              title: product.title,
+              price: product.price,
+              currency: product.currency,
+              storeName: product.storeName,
+              thumbnailUrl: product.thumbnailUrl,
+            }}
+          />
 
           <ul className="grid gap-2 text-xs text-zinc-500 dark:text-zinc-400">
             <li>✓ Livraison numérique instantanée après paiement confirmé</li>

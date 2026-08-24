@@ -124,6 +124,31 @@ Lecture seule via RLS (`vendors_select_public_or_own`) : fiche boutique + bandea
 par statut (PENDING/ACTIVE/REJECTED/SUSPENDED), état vide sinon. Aucun chemin
 d'écriture du statut (policy insert-only PENDING + `guard_vendor_sensitive`).
 
+## Panier & checkout (Phase 6)
+
+### Panier client — indicatif uniquement
+localStorage versionné (`nc-cart-v1`) via store externe + `useSyncExternalStore`
+(quantité 1 par produit numérique, dédoublonnage, devise unique imposée,
+synchronisation multi-onglets). Rien de ce panier n'est une donnée de commande :
+le checkout n'envoie que des UUID produits.
+
+```
+/panier · /checkout (anon → login?next=/checkout, proxy + page + action)
+  → placeOrderAction : profil requis + CGU + Zod uuid[]
+    → RPC create_checkout_order(uuid[])  [security definer, ATOMIQUE]
+        buyer := auth.uid() · profil ACTIVE exigé
+        re-pricing : products PUBLISHED × vendors ACTIVE
+        commission = round(line * bps / 10000, 2)  (= half-up TS)
+        INSERT orders PENDING + order_items snapshot + payments 'mock' PENDING
+  → écran confirmation = montants PostgreSQL ; panier vidé après succès
+```
+
+Aucune policy d'écriture client sur orders/order_items/payments : la commande ne
+peut naître ni muter que par cette RPC. Le passage PAID reste réservé au webhook
+signé idempotent (Phase 7, invariant 4) via `confirm_order_payment`.
+
+Détails et alternatives écartées : D-023…D-025.
+
 ## Phases
 
 Voir tableau de statut dans `README.md`. Chaque phase se termine par lint + typecheck + tests + build verts et un commit conventionnel.
