@@ -32,7 +32,7 @@ Provider de paiement (interface PaymentProvider → Mock en V1)
 3. **Fichiers privés** : bucket non public ; téléchargement = contrôle de droit (order_item PAID) puis signed URL ≤ 60 s.
 4. **Paiement** : jamais PAID sur déclaration frontend. Chaîne : webhook signé → vérif signature → idempotence (`payment_events` unique) → comparaison montant/devise → fonction SQL atomique `confirm_order_payment`.
 5. **Double-crédit / double-retrait** : contraintes UNIQUE sur ledger + verrou transactionnel dans les RPC financières.
-6. **Rôles** : `profiles.role` non modifiable via API/RLS ; ADMIN promu uniquement en SQL manuel.
+6. **Rôles** : `profiles.role` non modifiable via API/RLS, **sauf** la transition signée du flux vendeur (voir Phase 5) ; ADMIN promu uniquement en SQL manuel.
 7. **Audit** : toute action sensible écrit dans `audit_logs`.
 8. **Secrets** : uniquement via variables d'environnement validées (`lib/env.ts`) ; `.env*` ignorés par Git.
 
@@ -84,6 +84,45 @@ Checkout serveur → recalcul total (jamais confiance client)
 
 ### Défense en profondeur des espaces rôles
 `proxy.ts` (barrière UX) → layout serveur `requireRole` (profil réel via RLS) → policies PostgreSQL.
+
+## Flux vendeur BUYER → VENDOR (Phase 5)
+
+### Principe
+Un seul compte : la création de la boutique par un BUYER bascule automatiquement son
+profil en VENDOR, et sa suppression le ramène BUYER. La bascule vit **dans la base**
+(migration `0010_vendor_role_flow.sql`) — le client n'envoie jamais `role`.
+
+```
+BUYER crée SA boutique (INSERT vendors, policy vendors_insert_own)
+  → trigger trg_vendors_promote_role → promote_to_vendor_role()
+      set_config('app.vendor_role_flow', user_id)   ← signature transactionnelle
+      UPDATE profiles SET role='VENDOR' WHERE id=user_id AND role='BUYER'
+VENDOR supprime sa boutique (DELETE vendors)
+  → trigger trg_vendors_demote_role → démission symétrique (role='VENDOR' only)
+```
+
+### Garde profils v2 (`guard_profile_sensitive`)
+L'écriture de `role`/`status` reste interdite à tout client ; l'unique exception est
+la transition du flux, validée si ET SEULEMENT SI :
+1. profondeur de trigger > 1 (impossible depuis une requête API directe) ;
+2. exécution definer réelle (`current_user='postgres'` ≠ `session_user`) ;
+3. GUC `app.vendor_role_flow` == id du profil modifié — posé par nos triggers via
+   `set_config(..., true)` (transactionnel, non forgeable par le client) ;
+4. transition exacte `BUYER→VENDOR` ou `VENDOR→BUYER` ;
+5. `status` strictement inchangé.
+→ ADMIN jamais touché (condition `role='BUYER'/'VENDOR'`), statut totalement
+protégé, usurpation d'un autre profil impossible (GUC ≠ id). Détails : D-019…D-021.
+
+### Création de boutique (`/dashboard/devenir-vendeur`)
+- Action serveur `createVendorAction` : BUYER uniquement ; slug généré et
+  dédoublonné serveur (`slugifyFr`, suffixe -2/-3…) — jamais accepté du client ;
+- INSERT via client anon/session (RLS `vendors_insert_own` : `user_id=auth.uid()`
+  et `status='PENDING'`) ; doublon boutique → erreur friendly (UNIQUE user_id).
+
+### Espace vendeur (`/vendor`)
+Lecture seule via RLS (`vendors_select_public_or_own`) : fiche boutique + bandeau
+par statut (PENDING/ACTIVE/REJECTED/SUSPENDED), état vide sinon. Aucun chemin
+d'écriture du statut (policy insert-only PENDING + `guard_vendor_sensitive`).
 
 ## Phases
 

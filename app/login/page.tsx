@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -27,7 +28,15 @@ export default async function LoginPage({
 
   return (
     <main className="flex flex-1 items-center justify-center px-6 py-16">
-      <LoginForm nextPath={nextPath} />
+      <div className="flex w-full max-w-sm flex-col gap-4">
+        <Link
+          href="/"
+          className="text-xs font-medium text-zinc-500 underline-offset-4 hover:underline dark:text-zinc-400"
+        >
+          ← NovaConnect Market
+        </Link>
+        <LoginForm nextPath={nextPath} />
+      </div>
     </main>
   );
 }

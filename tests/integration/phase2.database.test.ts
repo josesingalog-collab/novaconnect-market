@@ -136,7 +136,7 @@ describe("Phase 2 — Auth & profils", () => {
       data.some((row: Record<string, unknown>) => row["role"] === "ADMIN");
     expect(promoted).toBe(false);
     if (error !== null) {
-      expect(error.message.toLowerCase()).toContain("role");
+      expect(error.message.toLowerCase()).toContain("rôle");
     }
   });
 });

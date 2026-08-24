@@ -115,6 +115,14 @@ export default async function DashboardPage() {
               Espace vendeur
             </Link>
           )}
+          {profile?.role === "BUYER" && (
+            <Link
+              href="/dashboard/devenir-vendeur"
+              className="rounded-lg border border-dashed border-zinc-400 px-3 py-1.5 text-sm font-medium text-zinc-800 transition-colors hover:border-zinc-900 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:border-zinc-300 dark:hover:bg-zinc-800"
+            >
+              ✨ Devenir vendeur
+            </Link>
+          )}
           {profile?.role === "ADMIN" && (
             <Link
               href="/admin"
@@ -129,7 +137,6 @@ export default async function DashboardPage() {
       <section className="rounded-xl border border-dashed border-zinc-300 p-6 text-sm text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
         <p className="font-medium text-zinc-800 dark:text-zinc-200">Prochaines phases</p>
         <ul className="mt-2 list-inside list-disc space-y-1">
-          <li>Phase 5 : création de boutique vendeur et catalogue</li>
           <li>Phase 6+ : panier, commandes et paiements</li>
         </ul>
         <Link href="/" className="mt-4 inline-block font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100">

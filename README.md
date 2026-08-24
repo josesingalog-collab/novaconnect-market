@@ -53,8 +53,8 @@ docs/           architecture.md · decisions.md · database.md…
 - [x] **Phase 1** — Fondations (Next.js strict, config, money system, clients Supabase)
 - [x] **Phase 2** — Schéma DB, migrations, RLS
 - [x] **Phase 3** — Auth + profils + rôles
-- [ ] Phase 4 — Marketplace publique
-- [ ] Phase 5 — Espace vendeur
+- [x] **Phase 4** — Marketplace publique (catalogue, filtres, fiche produit, navigation)
+- [x] **Phase 5** — Espace vendeur (création de boutique, flux BUYER→VENDOR, statut boutique)
 - [ ] Phase 6 — Panier + commandes
 - [ ] Phase 7 — Paiements (interface + MockProvider + webhook idempotent)
 - [ ] Phase 8 — Livraison numérique sécurisée
