@@ -56,8 +56,7 @@ docs/           architecture.md · decisions.md · database.md…
 - [x] **Phase 4** — Marketplace publique (catalogue, filtres, fiche produit, navigation)
 - [x] **Phase 5** — Espace vendeur (création de boutique, flux BUYER→VENDOR, statut boutique)
 - [x] **Phase 6** — Panier + commandes (checkout RPC atomique, re-pricing serveur, snapshots)
-- [ ] Phase 6 — Panier + commandes
-- [ ] Phase 7 — Paiements (interface + MockProvider + webhook idempotent)
+- [x] **Phase 7** — Paiement simulé (webhook HMAC signé idempotent, RPC `confirm_order_payment`, simulation acheteur)
 - [ ] Phase 8 — Livraison numérique sécurisée
 - [ ] Phase 9 — Ledger + retraits
 - [ ] Phase 10 — Back-office admin

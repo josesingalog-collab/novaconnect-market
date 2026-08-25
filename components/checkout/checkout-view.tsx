@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useActionState, useRef } from "react";
+import { useEffect, useActionState, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import {
+  getMyOrderStatusAction,
   initialCheckoutState,
+  mockConfirmPaymentAction,
   placeOrderAction,
   type CheckoutFormState,
 } from "@/app/actions/checkout";
@@ -168,8 +170,8 @@ export function CheckoutView({ authenticated }: { authenticated: boolean }) {
         </button>
 
         <p className="mt-3 text-center text-[11px] leading-4 text-zinc-400 dark:text-zinc-500">
-          Montants définitifs recalculés par le serveur. Le paiement mobile money
-          arrive en Phase 7 — aucune somme n&apos;est prélevée maintenant.
+          Montants définitifs recalculés par le serveur. Paiement simulé
+          (provider mock) — aucune somme réelle n&apos;est prélevée.
         </p>
       </section>
     </form>
@@ -177,10 +179,111 @@ export function CheckoutView({ authenticated }: { authenticated: boolean }) {
 }
 
 function OrderConfirmation({ order }: { order: NonNullable<CheckoutFormState["order"]> }) {
+  const [orderStatus, setOrderStatus] = useState<"PENDING" | "PAID" | "OTHER">("PENDING");
+  const [payError, setPayError] = useState<string | null>(null);
+  const [isPaying, startPaying] = useTransition();
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopPolling = (): void => {
+    if (pollRef.current !== null) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  };
+
+  // Polling du statut serveur tant que la commande est PENDING : le webhook
+  // (ou toute autre source) peut confirmer le paiement de l'extérieur.
+  useEffect(() => {
+    if (orderStatus !== "PENDING") {
+      stopPolling();
+      return;
+    }
+    let cancelled = false;
+    const tick = (): void => {
+      void getMyOrderStatusAction(order.orderId).then(({ status }) => {
+        if (cancelled) return;
+        if (status === "PAID") {
+          setOrderStatus("PAID");
+        } else if (status === null) {
+          setOrderStatus("OTHER");
+        }
+      });
+    };
+    pollRef.current = setInterval(tick, 3000);
+    return () => {
+      cancelled = true;
+      stopPolling();
+    };
+  }, [order.orderId, orderStatus]);
+
+  const simulatePayment = (): void => {
+    setPayError(null);
+    startPaying(() => {
+      void mockConfirmPaymentAction(order.orderId).then((result) => {
+        if (result.ok) {
+          setOrderStatus(result.orderStatus === "PAID" ? "PAID" : "OTHER");
+        } else {
+          setPayError(result.error);
+        }
+      });
+    });
+  };
+
+  if (orderStatus === "PAID") {
+    return (
+      <div className="mx-auto flex max-w-2xl flex-col gap-6">
+        <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-8 text-center dark:border-emerald-900 dark:bg-emerald-950/40">
+          <p aria-hidden className="text-4xl">🎉</p>
+          <h2 className="mt-3 text-xl font-semibold tracking-tight text-emerald-800 dark:text-emerald-300">
+            Paiement confirmé — merci !
+          </h2>
+          <p className="mt-1.5 text-sm leading-6 text-emerald-700 dark:text-emerald-400">
+            Commande <strong>{order.orderNumber}</strong> payée (
+            {money(order.total, order.currency)}). Tes fichiers numériques sont
+            accessibles depuis tes commandes.
+          </p>
+        </div>
+
+        <ul className="flex flex-col divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-950">
+          {order.items.map((item) => (
+            <li key={item.productId} className="flex items-center justify-between gap-4 p-4">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                  {item.productTitle}
+                </p>
+                <p className="mt-0.5 truncate text-xs text-zinc-500 dark:text-zinc-400">
+                  {item.storeName} · Qté {item.quantity}
+                </p>
+              </div>
+              <p className="shrink-0 text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                {money(item.lineTotal, item.currency)}
+              </p>
+            </li>
+          ))}
+        </ul>
+
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link
+            href="/dashboard/commandes"
+            className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+          >
+            Voir mes commandes
+          </Link>
+          <Link
+            href="/catalogue"
+            className="rounded-lg border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Continuer mes achats
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-center dark:border-emerald-900 dark:bg-emerald-950/40">
-        <p aria-hidden className="text-3xl">✅</p>
+        <p aria-hidden className="text-3xl">🧾</p>
         <h2 className="mt-2 text-lg font-semibold tracking-tight text-emerald-800 dark:text-emerald-300">
           Commande {order.orderNumber} créée
         </h2>
@@ -190,9 +293,31 @@ function OrderConfirmation({ order }: { order: NonNullable<CheckoutFormState["or
         </p>
       </div>
 
-      <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center text-sm leading-6 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
-        💳 Le paiement (mobile money) sera disponible en <strong>Phase 7</strong>.
-        Ta commande est conservée en l&apos;état — aucun montant n&apos;est prélevé.
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-center dark:border-amber-900 dark:bg-amber-950/40">
+        <p className="text-sm leading-6 text-amber-800 dark:text-amber-300">
+          💳 Provider <strong>mock</strong> : confirme ci-dessous pour créditer
+          les vendeurs et marquer la commande payée (aucun montant réel).
+        </p>
+
+        {payError !== null && (
+          <div role="alert" className="mx-auto mt-3 max-w-md rounded-lg bg-red-50 px-3 py-2.5 text-xs leading-5 text-red-700 dark:bg-red-950/50 dark:text-red-300">
+            {payError}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={simulatePayment}
+          disabled={isPaying}
+          className="mt-4 rounded-lg bg-zinc-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+        >
+          {isPaying ? "Confirmation en cours…" : "Simuler le paiement"}
+        </button>
+
+        <p className="mt-3 inline-flex items-center justify-center gap-2 text-[11px] text-amber-700 dark:text-amber-400">
+          <span aria-hidden className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-500" />
+          En attente du fournisseur de paiement… vérification automatique toutes les 3 s
+        </p>
       </div>
 
       <ul className="flex flex-col divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-950">

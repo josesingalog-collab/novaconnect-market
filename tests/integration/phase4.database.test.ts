@@ -152,7 +152,10 @@ describe("Phase 4 — Catalogue public (RLS)", () => {
 
     await service.from("products").update({ status: "PUBLISHED" }).eq("id", inserted?.id ?? "");
 
-    const page = await listPublicProducts(anon);
+    // Filtre par LA catégorie du run (suffixe unique) : la base de dev partagée
+    // accumule les fixtures des exécutions précédentes, la page 1 globale n'est
+    // donc pas un espace stable pour ce produit.
+    const page = await listPublicProducts(anon, { categoryId: categoryActiveId });
     const slugs = page.products.map((p) => p.slug);
 
     expect(slugs).toContain(`ebook-marketing-${suffix}`);

@@ -1,9 +1,12 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createCheckoutOrder, type CheckoutOrder } from "@/services/orders/checkout";
+import { getOwnOrderStatus, type OrderStatusRow } from "@/services/orders/payment-status";
 import { checkoutSchema } from "@/schemas/checkout";
 
 export interface CheckoutFormState {
@@ -83,4 +86,88 @@ function parseProductIds(formData: FormData): string[] {
   } catch {
     return [];
   }
+}
+
+// ---------------------------------------------------------------------------
+// Paiement simulé (V1, provider "mock") — D-026.
+//
+// Le contrat validé : la simulation appelle DIRECTEMENT la RPC
+// `confirm_order_payment` côté serveur, sans passer par le webhook HTTP signé
+// (réservé aux vraies notifications fournisseur et aux tests curl).
+//
+// Sécurité : ownership vérifié via une lecture RLS de la commande AVANT tout
+// usage du client service_role — celui-ci n'est employé que pour lire la
+// ligne `payments` (table sans policy par conception) puis exécuter la RPC,
+// exactement comme le ferait le webhook. Aucun montant ni statut ne vient du
+// client : seuls l'id de commande et l'intention transitent.
+// ---------------------------------------------------------------------------
+
+export type MockPaymentResult =
+  | { readonly ok: true; readonly orderStatus: OrderStatusRow }
+  | { readonly ok: false; readonly error: string };
+
+export async function mockConfirmPaymentAction(orderId: string): Promise<MockPaymentResult> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId)) {
+    return { ok: false, error: "Commande invalide." };
+  }
+
+  const current = await getCurrentProfile();
+  if (current.kind !== "ok") {
+    return { ok: false, error: "Session expirée. Reconnecte-toi." };
+  }
+
+  // Ownership + statut via RLS (null si commande d'autrui ou inexistante).
+  const supabase = await createSupabaseServerClient();
+  const orderStatus = await getOwnOrderStatus(supabase, orderId);
+  if (orderStatus === null) {
+    return { ok: false, error: "Commande introuvable." };
+  }
+  if (orderStatus === "PAID") {
+    return { ok: true, orderStatus: "PAID" }; // idempotent côté UX
+  }
+  if (orderStatus !== "PENDING") {
+    return { ok: false, error: `Commande non payable (statut : ${orderStatus}).` };
+  }
+
+  const admin = createSupabaseAdminClient();
+  const { data: payment } = await admin
+    .from("payments")
+    .select("id")
+    .eq("order_id", orderId)
+    .eq("status", "PENDING")
+    .limit(1)
+    .maybeSingle();
+
+  if (payment === null) {
+    return {
+      ok: false,
+      error: "Aucun paiement en attente pour cette commande.",
+    };
+  }
+
+  const { error } = await admin.rpc("confirm_order_payment", {
+    p_payment_id: payment.id,
+  });
+  if (error !== null) {
+    return {
+      ok: false,
+      error: /non confirmable|non en attente/i.test(error.message)
+        ? "Ce paiement n'est plus confirmable."
+        : "La confirmation a échoué. Réessaie dans un instant.",
+    };
+  }
+
+  revalidatePath("/dashboard/commandes");
+  return { ok: true, orderStatus: "PAID" };
+}
+
+/** Polling de l'écran de confirmation — lecture RLS du statut, aucun secret. */
+export async function getMyOrderStatusAction(
+  orderId: string,
+): Promise<{ status: OrderStatusRow | null }> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId)) {
+    return { status: null };
+  }
+  const supabase = await createSupabaseServerClient();
+  return { status: await getOwnOrderStatus(supabase, orderId) };
 }

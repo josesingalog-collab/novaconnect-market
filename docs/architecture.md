@@ -147,6 +147,52 @@ Aucune policy d'écriture client sur orders/order_items/payments : la commande n
 peut naître ni muter que par cette RPC. Le passage PAID reste réservé au webhook
 signé idempotent (Phase 7, invariant 4) via `confirm_order_payment`.
 
+## Paiement simulé & confirmation (Phase 7)
+
+### Chaîne transactionnelle
+
+```
+[Simulation acheteur]                          [Webhook fournisseur]
+bouton « Simuler le paiement »                 POST /api/webhooks/payment
+  → mockConfirmPaymentAction                     x-nc-signature: HMAC-SHA256(corps brut)
+      profil requis (action serveur)             secret = PAYMENT_WEBHOOK_SECRET
+      ownership : lecture RLS orders             verifyPaymentSignature (timing-safe)
+        → PENDING exigé                        ┌─ journal payment_events
+      payments PENDING lue via service_role    │   UNIQUE(provider, event_hash)
+        (table sans policy, par conception)    │   doublon ⇒ 200 {replay:true}, STOP
+      RPC confirm_order_payment ───────────────┤
+        (0007, security definer,               ├─ paiement introuvable   ⇒ 404
+         grant service_role seul)              ├─ statut non confirmable ⇒ 409
+                                               └─ signature invalide     ⇒ 401
+```
+
+`confirm_order_payment` verrouille payment puis order (`for update`) et applique,
+en une transaction : payment→PAID+confirmed_at, order→PAID+paid_at,
+platform_fee recalculé depuis les snapshots, crédits `SALE_CREDIT` par ligne de
+commande, entrée d'audit `order.paid`.
+
+### Idempotence — trois couches indépendantes (D-027)
+
+1. **Webhook** : `UNIQUE(provider, event_hash)` sur `payment_events` — un hash
+   déjà journalisé accuse réception (200) sans rejouer la confirmation.
+2. **RPC** : payment déjà PAID → no-op silencieux ; commande déjà PAID avec
+   paiement en retard → aligne le paiement SANS re-créditer.
+3. **Ledger** : `UNIQUE(entry_type, reference)` (`SALE_CREDIT`, référence =
+   order_item_id) — même un appel hors webhook ne peut pas doubler un crédit.
+
+### Simulation (D-026)
+
+En V1 le provider est figé à `mock`. L'action serveur vérifie l'ownership via
+une lecture RLS AVANT tout usage du client service_role, puis appelle la même
+RPC que le webhook — chemin transactionnel strictement identique. Le webhook
+HTTP signé reste le point d'entrée canonique des notifications fournisseur ;
+il répond 200/400/401/404/409 et exige `PAYMENT_WEBHOOK_SECRET` (500 si absent).
+
+L'acheteur suit l'état réel dans PostgreSQL : l'écran de confirmation interroge
+le statut de sa commande toutes les 3 s tant qu'elle est PENDING et bascule sur
+l'écran « payée » dès que le statut passe PAID — quelle que soit la source
+(bouton de simulation ou futur webhook réel).
+
 Détails et alternatives écartées : D-023…D-025.
 
 ## Phases
