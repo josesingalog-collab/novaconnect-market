@@ -195,6 +195,46 @@ l'écran « payée » dès que le statut passe PAID — quelle que soit la sourc
 
 Détails et alternatives écartées : D-023…D-025.
 
+## Livraison numérique sécurisée (Phase 8)
+
+### Chaîne de livraison numérique
+
+```
+[Commande PAID]
+  → utilisateur clique « Télécharger » sur /dashboard/commandes
+    → GET /api/downloads/[orderItemId]
+      → session vérifiée (auth.getUser)
+      → RPC create_download_grant(p_order_item)
+        → Droit DÉRIVÉ : acheteur d'une commande PAID / vendeur propriétaire / admin
+        → lookup product_files (version la plus récente)
+        → INSERT dans downloads (audit)
+        → RETURN { storage_path, file_name, mime_type }
+      → admin.storage.createSignedUrl(storage_path, 120 s)
+      → redirect 302 vers la signed URL
+```
+
+### Invariants
+
+1. **Droit dérivé, jamais stocké** : le droit de télécharger n'est PAS une colonne de la base. Il est recalculé à chaque appel par `create_download_grant` à partir de `order_items` + `orders` (statut PAID) + appartenance.
+2. **Bucket `product-files` PRIVÉ** : aucun client ne peut forger d'URL. Seul le serveur Next.js (via `createSupabaseAdminClient`) accède à `admin.storage.createSignedUrl`.
+3. **Signed URL ≤ 120 s** : la seule artefact exposé au client est une URL expirante ; elle ne donne aucun accès durable au bucket.
+4. **Audit systématique** : chaque grant réussi insère une ligne dans `downloads` (user_id, order_item_id, product_file_id, downloaded_at).
+5. **RLS sur `downloads`** : lecture propriétaire ou admin uniquement ; INSERT réservé au serveur (route handler).
+6. **Pas de migration supplémentaire** : la fonction `create_download_grant` est la seule nouveauté DB de Phase 8 (migration 0012).
+
+### RPC `create_download_grant` (migration 0012)
+
+- Security definer, `search_path = public`
+- Vérifie : profil ACTIVE + (acheteur commande PAID | vendeur de la ligne | admin)
+- Lookup du fichier produit (dernière version)
+- Insert dans `downloads` + retourne `{ storage_path, file_name, mime_type }`
+- `revoke all` + `grant execute to authenticated, service_role`
+
+### Route handler `GET /api/downloads/[orderItemId]`
+
+- Validation UUID + session + RPC grant + signed URL + redirect 302
+- Codes HTTP : 401 (non connecté), 403 (non autorisé), 404 (fichier/introuvable), 500 (signed URL)
+
 ## Phases
 
 Voir tableau de statut dans `README.md`. Chaque phase se termine par lint + typecheck + tests + build verts et un commit conventionnel.

@@ -30,6 +30,14 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    // Les Server Actions et Route Handlers sont server-only par construction
+    // ("use server" ou runtime = "nodejs") : le client admin y est légitime.
+    files: ["app/actions/**/*.ts", "app/api/**/*.ts"],
+    rules: {
+      "no-restricted-imports": "off",
+    },
+  },
+  {
     // Sécurité : process.env accessible uniquement dans les modules de configuration.
     files: ["**/*.ts", "**/*.tsx"],
     ignores: ["lib/env.ts", "lib/config.ts", "next.config.ts", "vitest.config.mts", "tests/**"],

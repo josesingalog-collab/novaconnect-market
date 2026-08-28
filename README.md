@@ -57,7 +57,7 @@ docs/           architecture.md · decisions.md · database.md…
 - [x] **Phase 5** — Espace vendeur (création de boutique, flux BUYER→VENDOR, statut boutique)
 - [x] **Phase 6** — Panier + commandes (checkout RPC atomique, re-pricing serveur, snapshots)
 - [x] **Phase 7** — Paiement simulé (webhook HMAC signé idempotent, RPC `confirm_order_payment`, simulation acheteur)
-- [ ] Phase 8 — Livraison numérique sécurisée
+- [x] **Phase 8** — Livraison numérique sécurisée (RPC `create_download_grant`, bucket privé, signed URL 120 s, audit downloads)
 - [ ] Phase 9 — Ledger + retraits
 - [ ] Phase 10 — Back-office admin
 - [ ] Phase 11 — Tests & audit sécurité

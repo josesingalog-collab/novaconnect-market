@@ -164,7 +164,7 @@ beforeAll(async () => {
 
   const a = await makeUser(`OrderBuyerA${suffix}`);
   buyerAId = a.user.id;
-  const b = await makeUser(`OrderBuyerB${suffix}`);
+  await makeUser(`OrderBuyerB${suffix}`);
 
   const vu = await makeActiveVendor(`OrderVendorU${suffix}`, `vendoru-${suffix}`);
   vendorUId = vu.vendorRowId;

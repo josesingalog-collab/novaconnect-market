@@ -4,11 +4,10 @@ import { useEffect, useActionState, useRef, useState, useTransition } from "reac
 import Link from "next/link";
 import {
   getMyOrderStatusAction,
-  initialCheckoutState,
   mockConfirmPaymentAction,
   placeOrderAction,
-  type CheckoutFormState,
 } from "@/app/actions/checkout";
+import { initialCheckoutState, type CheckoutFormState } from "@/lib/checkout-form-state";
 import { useCart } from "@/components/cart/cart-context";
 import {
   formatMinorAmount,

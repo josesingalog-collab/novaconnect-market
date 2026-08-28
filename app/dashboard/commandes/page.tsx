@@ -71,6 +71,26 @@ export default async function OrdersPage() {
     .order("created_at", { ascending: false })
     .limit(50);
 
+  // Lignes des commandes payées uniquement (RLS order_items_select) :
+  // le téléchargement est dérivé du statut PAID, jamais mémorisé ailleurs.
+  const paidOrderIds = (orders ?? [])
+    .filter((order) => order.status === "PAID")
+    .map((order) => order.id);
+  const { data: paidItems } =
+    paidOrderIds.length > 0
+      ? await supabase
+          .from("order_items")
+          .select("id, order_id, product_title")
+          .in("order_id", paidOrderIds)
+      : { data: null };
+
+  const itemsByOrderId = new Map<string, Array<{ id: string; productTitle: string }>>();
+  for (const item of paidItems ?? []) {
+    const list = itemsByOrderId.get(item.order_id) ?? [];
+    list.push({ id: item.id, productTitle: item.product_title });
+    itemsByOrderId.set(item.order_id, list);
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12">
       <div>
@@ -100,27 +120,52 @@ export default async function OrdersPage() {
           {orders.map((order) => {
             const badge = STATUS_BADGES[order.status] ?? FALLBACK_BADGE;
             return (
-              <li key={order.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                    {order.order_number}
-                  </p>
-                  <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-                    {new Date(order.created_at).toLocaleDateString("fr-FR", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
+              <li key={order.id} className="flex flex-col gap-3 p-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                      {order.order_number}
+                    </p>
+                    <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                      {new Date(order.created_at).toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                  <span
+                    className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge.className}`}
+                  >
+                    {badge.label}
+                  </span>
+                  <p className="shrink-0 text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                    {money(String(order.total), order.currency)}
                   </p>
                 </div>
-                <span
-                  className={`inline-flex shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge.className}`}
-                >
-                  {badge.label}
-                </span>
-                <p className="shrink-0 text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                  {money(String(order.total), order.currency)}
-                </p>
+
+                {itemsByOrderId.get(order.id)?.length ? (
+                  <ul className="flex flex-col gap-1.5 rounded-lg bg-zinc-50 p-3 dark:bg-zinc-900/60">
+                    {itemsByOrderId.get(order.id)?.map((item) => (
+                      <li
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 text-sm"
+                      >
+                        <span className="min-w-0 truncate text-zinc-700 dark:text-zinc-300">
+                          {item.productTitle}
+                        </span>
+                        {order.status === "PAID" ? (
+                          <a
+                            href={`/api/downloads/${item.id}`}
+                            className="shrink-0 rounded-md bg-zinc-900 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                          >
+                            Télécharger
+                          </a>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </li>
             );
           })}

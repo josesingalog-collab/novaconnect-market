@@ -34,7 +34,7 @@ const PASSWORD = "Passw0rd!Test";
 
 let service: SupabaseClient;
 const createdUsers: User[] = [];
-let createdEventIds: string[] = [];
+const createdEventIds: string[] = [];
 
 let buyerId = "";
 let vendorUId = "";

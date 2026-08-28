@@ -5,22 +5,10 @@ import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createCheckoutOrder, type CheckoutOrder } from "@/services/orders/checkout";
+import { createCheckoutOrder } from "@/services/orders/checkout";
 import { getOwnOrderStatus, type OrderStatusRow } from "@/services/orders/payment-status";
 import { checkoutSchema } from "@/schemas/checkout";
-
-export interface CheckoutFormState {
-  status: "idle" | "error" | "success";
-  error: string | null;
-  /** Rempli uniquement quand status === "success" (montants serveur). */
-  order: CheckoutOrder | null;
-}
-
-export const initialCheckoutState: CheckoutFormState = {
-  status: "idle",
-  error: null,
-  order: null,
-};
+import type { CheckoutFormState } from "@/lib/checkout-form-state";
 
 /**
  * Crée la commande depuis le panier du client.
