@@ -420,6 +420,12 @@ begin
     raise exception 'Produit non autorise';
   end if;
 
+  -- vendor_id IMMUTABLE pour le propriétaire : un vendeur ne peut
+  -- jamais rattacher son produit à une autre boutique.
+  if new.vendor_id is distinct from old.vendor_id then
+    raise exception 'vendor_id immuable';
+  end if;
+
   -- Interdictions absolues pour le vendeur
   if new.status in ('PUBLISHED', 'ARCHIVED') then
     raise exception 'Seule l''administration peut publier ou archiver un produit';
@@ -448,8 +454,9 @@ begin
     or new.price is distinct from old.price
     or new.currency is distinct from old.currency
     or new.category_id is distinct from old.category_id
-    or new.thumbnail_url is distinct from old.thumbnail_url
-  ) then
+     or new.thumbnail_url is distinct from old.thumbnail_url
+     or new.thumbnail_path is distinct from old.thumbnail_path
+   ) then
     raise exception 'Contenu fige pendant la validation ou la publication';
   end if;
 
@@ -1741,3 +1748,197 @@ $$;
 revoke all on function public.create_download_grant(uuid) from public, anon;
 grant execute on function public.create_download_grant(uuid)
   to authenticated, service_role;
+-- ============================================================================
+-- NOVACONNECT MARKET â€” Migration 0013
+-- Storage : policies vendeur pour bucket privÃ© product-files
+-- ============================================================================
+-- Le bucket `product-files` existe dÃ©jÃ  (migration 0008) mais sans aucune
+-- policy Storage. Sans policies, aucun upload ni lecture via l'API Storage
+-- n'est possible. Cette migration ajoute les 3 policies nÃ©cessaires :
+--   INSERT, SELECT, DELETE.
+-- Pas de policy UPDATE : le remplacement se fait par INSERT d'une nouvelle
+-- version (product_files.version + 1), l'ancien fichier reste orphelin.
+-- ============================================================================
+
+-- ---------------------------------------------------------------------------
+-- DROP POLICY (idempotence â€” re-exÃ©cution sans danger)
+-- ---------------------------------------------------------------------------
+drop policy if exists "product_files_owner_insert" on storage.objects;
+drop policy if exists "product_files_owner_select" on storage.objects;
+drop policy if exists "product_files_owner_delete" on storage.objects;
+
+-- ---------------------------------------------------------------------------
+-- INSERT : un vendeur peut uploader uniquement dans son propre dossier.
+--
+-- Le chemin est gÃ©nÃ©rÃ© entiÃ¨rement cÃ´tÃ© serveur :
+--   {user_id}/products/{product_id}/{uuid}.{ext}
+--
+-- storage.foldername(name) retourne un tableau des segments du chemin.
+-- [1] est le premier dossier, qui doit correspondre Ã  auth.uid().
+-- Cela empÃªche un vendeur d'uploader dans le dossier d'un autre vendeur.
+-- Le bucket_id vÃ©rifie qu'on ne cible que product-files.
+-- ---------------------------------------------------------------------------
+create policy "product_files_owner_insert"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'product-files'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+-- ---------------------------------------------------------------------------
+-- SELECT : un vendeur peut lire les fichiers de ses propres produits.
+--
+-- On vÃ©rifie que le storage_path de l'objet Storage correspond Ã  une ligne
+-- product_files, que le produit appartient Ã  un vendeur dont l'user_id
+-- correspond Ã  auth.uid(), OU que l'utilisateur est ADMIN.
+--
+-- Jointure : storage.objects.name = product_files.storage_path
+--            â†’ products â†’ vendors.user_id
+-- ---------------------------------------------------------------------------
+create policy "product_files_owner_select"
+  on storage.objects for select
+  using (
+    bucket_id = 'product-files'
+    and exists (
+      select 1
+      from public.product_files pf
+      join public.products p on p.id = pf.product_id
+      join public.vendors   v on v.id = p.vendor_id
+      where pf.storage_path = name
+        and (v.user_id = auth.uid() or public.is_admin())
+    )
+  );
+
+-- ---------------------------------------------------------------------------
+-- DELETE : un vendeur peut supprimer les fichiers de ses propres produits.
+--
+-- MÃªme logique que SELECT : le storage_path doit correspondre Ã  une ligne
+-- product_files appartenant au vendeur connectÃ© (ou Ã  un admin).
+-- ---------------------------------------------------------------------------
+create policy "product_files_owner_delete"
+  on storage.objects for delete
+  using (
+    bucket_id = 'product-files'
+    and exists (
+      select 1
+      from public.product_files pf
+      join public.products p on p.id = pf.product_id
+      join public.vendors   v on v.id = p.vendor_id
+      where pf.storage_path = name
+        and (v.user_id = auth.uid() or public.is_admin())
+    )
+  );
+
+-- >>> DEBUT MIGRATION 0013_product_files_storage.sql
+-- Contenu = migration 0013 (polices Storage product-files).
+
+
+-- >>> DEBUT MIGRATION 0014_product_cover_image.sql
+-- Contenu = migration 0014 (colonne thumbnail_path + policies Storage cover).
+
+-- ============================================================================
+-- NOVACONNECT MARKET — Migration 0014
+-- Images de couverture : colonne thumbnail_path sur products
+-- ============================================================================
+-- Ajoute une colonne nullable thumbnail_path sur products.
+-- Stocke le chemin Storage complet :
+--   {user_id}/products/{product_id}/cover/{uuid}.{ext}
+-- thumbnail_url reste inchangé pour compatibilité rétroactive.
+-- Le client ne fournit JAMAIS user_id, vendor_id ou storage_path.
+-- Le serveur dérive tout depuis auth.uid().
+-- ============================================================================
+
+-- ---------------------------------------------------------------------------
+-- DROP (idempotence — re-exécution sans danger)
+-- ---------------------------------------------------------------------------
+drop policy if exists "product_files_owner_insert" on storage.objects;
+drop policy if exists "product_files_owner_select" on storage.objects;
+drop policy if exists "product_files_owner_delete" on storage.objects;
+
+-- ---------------------------------------------------------------------------
+-- ALTER TABLE : ajout de thumbnail_path
+-- ---------------------------------------------------------------------------
+alter table public.products add column if not exists thumbnail_path text;
+
+create index if not exists idx_products_thumbnail_path on public.products (thumbnail_path);
+
+-- ---------------------------------------------------------------------------
+-- INSERT : un vendeur peut uploader une couverture dans son propre dossier.
+--
+-- Le chemin est généré entièrement côté serveur :
+--   {user_id}/products/{product_id}/cover/{uuid}.{ext}
+--
+-- storage.foldername(name) retourne un tableau des segments du chemin.
+-- [1] est le premier dossier, qui doit correspondre à auth.uid().
+-- Cela empêche un vendeur d'uploader dans le dossier d'un autre vendeur.
+-- Le bucket_id vérifie qu'on ne cible que product-files.
+-- ---------------------------------------------------------------------------
+create policy "product_files_owner_insert"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'product-files'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+-- ---------------------------------------------------------------------------
+-- SELECT : un vendeur peut lire les fichiers de ses propres produits,
+-- y compris les images de couverture.
+--
+-- Deux cas :
+--   1. Fichier numérique dans la table product_files
+--   2. Image de couverture dans products.thumbnail_path
+--
+-- Dans les deux cas, on vérifie que le produit appartient au vendeur
+-- connecté (via vendors.user_id) ou que l'utilisateur est ADMIN.
+-- ---------------------------------------------------------------------------
+create policy "product_files_owner_select"
+  on storage.objects for select
+  using (
+    bucket_id = 'product-files'
+    and (
+      exists (
+        select 1
+        from public.product_files pf
+        join public.products p  on p.id  = pf.product_id
+        join public.vendors    v  on v.id  = p.vendor_id
+        where pf.storage_path = name
+          and (v.user_id = auth.uid() or public.is_admin())
+      )
+      or exists (
+        select 1
+        from public.products p
+        join public.vendors    v on v.id = p.vendor_id
+        where p.thumbnail_path = name
+          and (v.user_id = auth.uid() or public.is_admin())
+      )
+    )
+  );
+
+-- ---------------------------------------------------------------------------
+-- DELETE : un vendeur peut supprimer ses fichiers, y compris couvertures.
+--
+-- Même logique que SELECT : storage_path = name, vérifié via
+-- product_files OU products.thumbnail_path.
+-- ---------------------------------------------------------------------------
+create policy "product_files_owner_delete"
+  on storage.objects for delete
+  using (
+    bucket_id = 'product-files'
+    and (
+      exists (
+        select 1
+        from public.product_files pf
+        join public.products p on p.id = pf.product_id
+        join public.vendors v on v.id = p.vendor_id
+        where pf.storage_path = name
+          and (v.user_id = auth.uid() or public.is_admin())
+      )
+      or exists (
+        select 1
+        from public.products p
+        join public.vendors v on v.id = p.vendor_id
+        where p.thumbnail_path = name
+          and (v.user_id = auth.uid() or public.is_admin())
+      )
+    )
+  );

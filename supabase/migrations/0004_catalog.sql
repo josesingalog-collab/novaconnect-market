@@ -107,6 +107,12 @@ begin
     raise exception 'Produit non autorise';
   end if;
 
+  -- vendor_id IMMUTABLE pour le propriétaire : un vendeur ne peut
+  -- jamais rattacher son produit à une autre boutique.
+  if new.vendor_id is distinct from old.vendor_id then
+    raise exception 'vendor_id immuable';
+  end if;
+
   -- Interdictions absolues pour le vendeur
   if new.status in ('PUBLISHED', 'ARCHIVED') then
     raise exception 'Seule l''administration peut publier ou archiver un produit';
@@ -136,6 +142,7 @@ begin
     or new.currency is distinct from old.currency
     or new.category_id is distinct from old.category_id
     or new.thumbnail_url is distinct from old.thumbnail_url
+    or new.thumbnail_path is distinct from old.thumbnail_path
   ) then
     raise exception 'Contenu fige pendant la validation ou la publication';
   end if;

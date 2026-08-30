@@ -235,6 +235,69 @@ Détails et alternatives écartées : D-023…D-025.
 - Validation UUID + session + RPC grant + signed URL + redirect 302
 - Codes HTTP : 401 (non connecté), 403 (non autorisé), 404 (fichier/introuvable), 500 (signed URL)
 
+## Gestion des produits vendeur (Phase 9 S1–S3)
+
+### Protection `vendor_id` immuable (S1)
+
+La colonne `vendor_id` de la table `products` est protégée par le trigger SQL
+`trg_products_guard` (`guard_product_transitions`). Toute tentative de modification
+de `vendor_id` — même vers la même valeur — est rejetée par la garde SQL, sauf
+pour le rôle `service_role`. Le `vendor_id` est injecté côté serveur à la création
+du produit et ne peut jamais être modifié par le client, même via une action serveur.
+
+### Flux de statut : `DRAFT → PENDING_REVIEW → PUBLISHED` (S2)
+
+Le produit est créé en statut **DRAFT** par le vendeur. Le passage à **PUBLISHED**
+est réservé à un administrateur via la garde SQL `guard_product_transitions`
+(rule "Seule l'administration peut effectuer cette action"). Aucun client ne peut
+changer le statut directement. Le vendeur peut uniquement modifier son DRAFT
+(titre, description, prix, catégorie, vignette) ; les transitions de statut sont
+validées par la garde SQL `guard_product_transitions` qui applique l'immutabilité
+de `vendor_id` et la protection du statut.
+
+### Upload Storage privé (S3)
+
+Le bucket `product-files` (privé, `public = false`) reçoit les fichiers numériques
+des produits. L'upload est protégé par trois policies Storage :
+
+| Policy | Cible | Condition |
+|---|---|---|
+| `product_files_owner_insert` | `storage.objects for insert` | `bucket_id = 'product-files'` ET `(storage.foldername(name))[1] = auth.uid()` |
+| `product_files_owner_select` | `storage.objects for select` | `bucket_id = 'product-files'` ET `storage_path` correspond à une ligne `product_files` appartenant au vendeur ou admin |
+| `product_files_owner_delete` | `storage.objects for delete` | Même condition que SELECT |
+
+Le chemin de stockage est généré entièrement côté serveur selon la convention
+`{user_id}/products/{product_id}/{uuid}.{ext}` où :
+- `user_id` = `auth.uid()` (dérivé côté serveur, jamais fourni par le client) ;
+- `product_id` = UUID du produit (vérifié côté serveur : appartient au vendeur connecté) ;
+- `uuid` = identifiant unique généré par `crypto.randomUUID()` côté serveur ;
+- `{ext}` = extension déduite du type MIME.
+
+Le `vendor_id` n'est jamais accepté depuis le client. Le vendeur ACTIVE est
+obligatoire (vérifié via le profil et la table `vendors`). Les types MIME et la
+taille du fichier sont validés côté serveur avant l'upload Storage.
+
+### Versionnement `product_files` (S3)
+
+La table `product_files` stocke les métadonnées de chaque version d'un fichier :
+`id`, `product_id`, `storage_path`, `file_name`, `file_size_bytes`, `mime_type`,
+`version`, `created_at`. Le remplacement d'un fichier crée une **nouvelle ligne**
+avec `version = version_max + 1` ; l'ancien fichier reste orphelin dans le bucket
+(accepté en V1). Le RPC `create_download_grant` (Phase 8) utilise toujours la
+dernière version (`ORDER BY version DESC LIMIT 1`).
+
+### Séparation RLS / Storage / Server Actions (S3)
+
+| Couche | Rôle | Limites |
+|---|---|---|
+| **RLS PostgreSQL** | Protection des tables `products`, `product_files`, `vendors` | `auth.uid()` = propriétaire ou admin ; vendeur ACTIVE obligatoire |
+| **Policies Storage** | Protection du bucket `product-files` | `storage.foldername(name)[1] = auth.uid()` pour insert ; jointure `product_files → products → vendors` pour select/delete |
+| **Server Actions** | Orchestration côté serveur | Validation du produit, du propriétaire, du statut vendeur, du MIME et de la taille ; génération du chemin Storage |
+
+Le client ne passe jamais `vendor_id`, `user_id` ou le contenu du fichier
+directement au serveur. Le chemin Storage est forgé serveur côté serveur ; le
+client ne fournit que le `File` brut et l'`productId` (UUID vérifié).
+
 ## Phases
 
 Voir tableau de statut dans `README.md`. Chaque phase se termine par lint + typecheck + tests + build verts et un commit conventionnel.

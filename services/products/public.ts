@@ -24,6 +24,8 @@ export interface PublicProduct {
   /** Description longue — présente uniquement via getPublicProductBySlug. */
   description: string | null;
   thumbnailUrl: string | null;
+  /** Chemin Storage privé de l'image de couverture. Ne jamais exposer directement. */
+  thumbnailPath: string | null;
   /** Montant en decimal string (D-001) ; PostgREST peut sérialiser en nombre (D-016). */
   price: string;
   currency: string;
@@ -56,7 +58,7 @@ export interface PublicVendor {
 }
 
 const PRODUCT_COLUMNS = `
-  id, slug, title, short_description, thumbnail_url, price, currency, published_at,
+  id, slug, title, short_description, thumbnail_url, thumbnail_path, price, currency, published_at,
   category:categories ( name, slug ),
   vendor:vendors ( store_name, slug )
 `;
@@ -69,6 +71,7 @@ interface ProductRow {
   /** Renseigné uniquement par la requête de détail. */
   description?: string | null;
   thumbnail_url: string | null;
+  thumbnail_path: string | null;
   price: string | number;
   currency: string;
   published_at: string;
@@ -84,6 +87,7 @@ function toPublicProduct(row: ProductRow): PublicProduct {
     shortDescription: row.short_description,
     description: row.description ?? null,
     thumbnailUrl: row.thumbnail_url,
+    thumbnailPath: row.thumbnail_path,
     price: String(row.price),
     currency: row.currency,
     publishedAt: row.published_at,
