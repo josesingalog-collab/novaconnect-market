@@ -9,8 +9,8 @@ export interface CatalogueRouteParams {
 
 function buildHref(params: CatalogueRouteParams, categorieSlug: string | null): string {
   const search = new URLSearchParams();
-  if (categorieSlug !== null) search.set("categorie", categorieSlug);
-  if (params.q !== undefined && params.q.length > 0) search.set("q", params.q);
+  if (categorieSlug !== null) search.set("categorie", encodeURIComponent(categorieSlug));
+  if (params.q !== undefined && params.q.length > 0) search.set("q", encodeURIComponent(params.q));
   if (params.tri !== undefined && params.tri !== "recent") search.set("tri", params.tri);
   const qs = search.toString();
   return qs.length > 0 ? `/catalogue?${qs}` : "/catalogue";
@@ -42,8 +42,8 @@ export function CategoryPills({
               href={href}
               className={
                 isActive
-                  ? "inline-block rounded-full border border-zinc-900 bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
-                  : "inline-block rounded-full border border-zinc-300 px-4 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-100 dark:hover:text-zinc-100"
+                  ? "border-input inline-block rounded-full border bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground"
+                  : "border-input inline-block rounded-full border bg-background px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               }
             >
               {category.name}
@@ -55,7 +55,7 @@ export function CategoryPills({
         <li>
           <Link
             href={buildHref(routeParams, null)}
-            className="inline-block rounded-full px-4 py-1.5 text-sm font-medium text-zinc-500 underline-offset-4 hover:underline dark:text-zinc-400"
+            className="inline-block rounded-full px-4 py-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline"
           >
             Toutes
           </Link>

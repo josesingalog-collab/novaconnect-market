@@ -9,12 +9,7 @@ export interface OrdersDb {
   from: SupabaseClient["from"];
 }
 
-export type OrderStatusRow =
-  | "PENDING"
-  | "PAID"
-  | "FAILED"
-  | "CANCELLED"
-  | "REFUNDED";
+export type OrderStatusRow = "PENDING" | "PAID" | "FAILED" | "CANCELLED" | "REFUNDED";
 
 /**
  * Statut actuel de la commande si elle appartient à l'appelant, sinon null
@@ -25,11 +20,7 @@ export async function getOwnOrderStatus(
   db: OrdersDb,
   orderId: string,
 ): Promise<OrderStatusRow | null> {
-  const { data } = await db
-    .from("orders")
-    .select("status")
-    .eq("id", orderId)
-    .maybeSingle();
+  const { data } = await db.from("orders").select("status").eq("id", orderId).maybeSingle();
   const value = data?.status;
   if (
     value === "PENDING" ||

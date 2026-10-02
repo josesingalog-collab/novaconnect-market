@@ -22,4 +22,4 @@ export const productFileSchema = z.object({
 });
 
 export type ProductFileInput = z.infer<typeof productFileSchema>;
-export type AllowedMimeType = typeof ALLOWED_MIME_TYPES[number];
+export type AllowedMimeType = (typeof ALLOWED_MIME_TYPES)[number];

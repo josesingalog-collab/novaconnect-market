@@ -3,8 +3,8 @@ import type { CatalogueRouteParams } from "@/components/marketplace/category-pil
 
 function buildHref(params: CatalogueRouteParams, page: number): string {
   const search = new URLSearchParams();
-  if (params.categorie !== undefined) search.set("categorie", params.categorie);
-  if (params.q !== undefined && params.q.length > 0) search.set("q", params.q);
+  if (params.categorie !== undefined) search.set("categorie", encodeURIComponent(params.categorie));
+  if (params.q !== undefined && params.q.length > 0) search.set("q", encodeURIComponent(params.q));
   if (params.tri !== undefined && params.tri !== "recent") search.set("tri", params.tri);
   if (page > 1) search.set("page", String(page));
   const qs = search.toString();
@@ -16,13 +16,21 @@ export function CataloguePagination({
   pageSize,
   total,
   routeParams,
+  baseHref,
 }: {
   page: number;
   pageSize: number;
   total: number;
-  routeParams: CatalogueRouteParams;
+  routeParams?: CatalogueRouteParams;
+  baseHref?: string;
 }) {
   const lastPage = Math.max(1, Math.ceil(total / pageSize));
+  const prevHref = baseHref
+    ? `${baseHref}?page=${page - 1}`
+    : buildHref(routeParams ?? {}, page - 1);
+  const nextHref = baseHref
+    ? `${baseHref}?page=${page + 1}`
+    : buildHref(routeParams ?? {}, page + 1);
 
   if (lastPage <= 1) {
     return null;
@@ -30,36 +38,42 @@ export function CataloguePagination({
 
   return (
     <nav
-      aria-label="Pagination du catalogue"
-      className="flex items-center justify-between gap-4 border-t border-zinc-200 pt-6 dark:border-zinc-800"
+      aria-label="Pagination"
+      className="flex items-center justify-between gap-4 border-t border-border pt-6"
     >
       {page > 1 ? (
         <Link
-          href={buildHref(routeParams, page - 1)}
-          className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          href={prevHref}
+          className="border-input rounded-lg border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           ← Précédent
         </Link>
       ) : (
-        <span aria-hidden className="rounded-lg border border-zinc-200 px-4 py-2 text-sm text-zinc-300 dark:border-zinc-800 dark:text-zinc-700">
+        <span
+          aria-hidden
+          className="border-input rounded-lg border bg-muted px-4 py-2 text-sm text-muted-foreground"
+        >
           ← Précédent
         </span>
       )}
 
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        Page <span className="font-semibold text-zinc-900 dark:text-zinc-100">{page}</span> sur{" "}
-        {lastPage} · {total} produit{total > 1 ? "s" : ""}
+      <p className="text-sm text-muted-foreground">
+        Page <span className="font-semibold text-foreground">{page}</span> sur {lastPage} · {total}{" "}
+        produit{total > 1 ? "s" : ""}
       </p>
 
       {page < lastPage ? (
         <Link
-          href={buildHref(routeParams, page + 1)}
-          className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          href={nextHref}
+          className="border-input rounded-lg border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           Suivant →
         </Link>
       ) : (
-        <span aria-hidden className="rounded-lg border border-zinc-200 px-4 py-2 text-sm text-zinc-300 dark:border-zinc-800 dark:text-zinc-700">
+        <span
+          aria-hidden
+          className="border-input rounded-lg border bg-muted px-4 py-2 text-sm text-muted-foreground"
+        >
           Suivant →
         </span>
       )}

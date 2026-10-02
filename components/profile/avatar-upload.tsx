@@ -58,11 +58,11 @@ export function AvatarUpload({ currentUrl }: { currentUrl: string | null }) {
       <img
         src={displayedUrl ?? "/avatar-placeholder.svg"}
         alt="Aperçu de l'avatar"
-        className="h-20 w-20 rounded-full border border-zinc-300 object-cover dark:border-zinc-700"
+        className="border-input h-20 w-20 rounded-full border object-cover"
       />
 
       <div className="flex flex-1 flex-col gap-2">
-        <label htmlFor="avatar" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+        <label htmlFor="avatar" className="text-sm font-medium text-foreground">
           Photo de profil — JPEG, PNG ou WebP · 2 Mo maximum
         </label>
         <input
@@ -71,24 +71,30 @@ export function AvatarUpload({ currentUrl }: { currentUrl: string | null }) {
           type="file"
           accept={ACCEPTED_TYPES.join(",")}
           onChange={handleFileChange}
-          className="block w-full cursor-pointer rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white dark:border-zinc-700 dark:bg-zinc-900 dark:file:bg-zinc-100 dark:file:text-zinc-900"
+          className="border-input block w-full cursor-pointer rounded-lg border bg-background px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary-foreground"
         />
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="text-xs text-muted-foreground">
           {fileName !== null ? `Fichier sélectionné : ${fileName}` : "Aucun fichier sélectionné."}
         </p>
 
         {localError !== null && (
-          <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-300">
+          <p
+            role="alert"
+            className="rounded-lg bg-destructive/5 px-3 py-2 text-sm text-destructive"
+          >
             {localError}
           </p>
         )}
         {state.error !== null && (
-          <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-300">
+          <p
+            role="alert"
+            className="rounded-lg bg-destructive/5 px-3 py-2 text-sm text-destructive"
+          >
             {state.error}
           </p>
         )}
         {state.success && (
-          <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+          <p role="status" className="rounded-lg bg-success/5 px-3 py-2 text-sm text-success">
             Avatar mis à jour.
           </p>
         )}
@@ -96,7 +102,7 @@ export function AvatarUpload({ currentUrl }: { currentUrl: string | null }) {
         <button
           type="submit"
           disabled={pending || fileName === null}
-          className="self-start rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+          className="self-start rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {pending ? "Envoi…" : "Envoyer l'avatar"}
         </button>

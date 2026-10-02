@@ -2,6 +2,9 @@
 
 import { useActionState } from "react";
 import { changePasswordAction, type PasswordFormState } from "@/app/actions/password";
+import { InputField } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 
 const initialState: PasswordFormState = { error: null, success: false };
 
@@ -10,53 +13,40 @@ export function PasswordChangeForm() {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="newPassword" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Nouveau mot de passe
-        </label>
-        <input
-          id="newPassword"
-          name="newPassword"
-          type="password"
-          required
-          autoComplete="new-password"
-          placeholder="8 caractères minimum"
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-100"
-        />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="confirmPassword" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-          Confirmer le nouveau mot de passe
-        </label>
-        <input
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          required
-          autoComplete="new-password"
-          placeholder="••••••••"
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-100"
-        />
-      </div>
+      <InputField
+        label="Nouveau mot de passe"
+        id="newPassword"
+        name="newPassword"
+        type="password"
+        placeholder="8 caractères minimum"
+        autoComplete="new-password"
+        required
+        description="Minimum 8 caractères"
+      />
+      <InputField
+        label="Confirmer le nouveau mot de passe"
+        id="confirmPassword"
+        name="confirmPassword"
+        type="password"
+        placeholder="••••••••"
+        autoComplete="new-password"
+        required
+      />
 
       {state.error !== null && (
-        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-300">
+        <Alert variant="error" title="Impossible de changer le mot de passe">
           {state.error}
-        </p>
+        </Alert>
       )}
       {state.success && (
-        <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
-          Mot de passe mis à jour. Ta session reste active.
-        </p>
+        <Alert variant="success" title="Mot de passe modifié">
+          Mot de passe mis à jour. Votre session reste active.
+        </Alert>
       )}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="mt-1 self-start rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-      >
+      <Button type="submit" disabled={pending} variant="default" className="mt-1 self-start">
         {pending ? "Mise à jour…" : "Changer le mot de passe"}
-      </button>
+      </Button>
     </form>
   );
 }

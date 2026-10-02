@@ -18,8 +18,7 @@ import { getStorageBucketProductFiles } from "@/lib/env";
 
 export const runtime = "nodejs";
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const COVER_ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 const COVER_MAX_BYTES = 5 * 1024 * 1024;
@@ -29,10 +28,54 @@ function json(status: number, body: Record<string, unknown>): NextResponse {
   return NextResponse.json(body, { status });
 }
 
-async function getProductOwner(supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>, productId: string): Promise<{ vendorId: string; userId: string } | null> {
-  const { data: product } = await supabase.from("products").select("vendor_id").eq("id", productId).single();
+function hasExpectedImageSignature(file: File, bytes: Uint8Array): boolean {
+  if (file.type === "image/jpeg") {
+    return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  }
+
+  if (file.type === "image/png") {
+    return (
+      bytes.length >= 8 &&
+      bytes[0] === 0x89 &&
+      bytes[1] === 0x50 &&
+      bytes[2] === 0x4e &&
+      bytes[3] === 0x47 &&
+      bytes[4] === 0x0d &&
+      bytes[5] === 0x0a &&
+      bytes[6] === 0x1a &&
+      bytes[7] === 0x0a
+    );
+  }
+
+  return (
+    bytes.length >= 12 &&
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x45 &&
+    bytes[10] === 0x42 &&
+    bytes[11] === 0x50
+  );
+}
+
+async function getProductOwner(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  productId: string,
+): Promise<{ vendorId: string; userId: string } | null> {
+  const { data: product } = await supabase
+    .from("products")
+    .select("vendor_id")
+    .eq("id", productId)
+    .single();
   if (!product) return null;
-  const { data: vendor } = await supabase.from("vendors").select("id, user_id").eq("id", product.vendor_id).eq("status", "ACTIVE").maybeSingle();
+  const { data: vendor } = await supabase
+    .from("vendors")
+    .select("id, user_id")
+    .eq("id", product.vendor_id)
+    .eq("status", "ACTIVE")
+    .maybeSingle();
   if (!vendor) return null;
   return { vendorId: vendor.id, userId: vendor.user_id };
 }
@@ -47,12 +90,18 @@ export async function GET(
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (user === null) {
     return json(401, { error: "Connexion requise" });
   }
 
-  const { data: product, error } = await supabase.from("products").select("thumbnail_path, vendor_id, status").eq("id", productId).single();
+  const { data: product, error } = await supabase
+    .from("products")
+    .select("thumbnail_path, vendor_id, status")
+    .eq("id", productId)
+    .single();
   if (error !== null || product === null) {
     return json(404, { error: "Produit introuvable" });
   }
@@ -63,7 +112,11 @@ export async function GET(
   }
 
   const isOwner = owner.userId === user.id;
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
   const isAdmin = profile?.role === "ADMIN";
   if (!isOwner && !isAdmin) {
     return json(403, { error: "Accès refusé" });
@@ -75,12 +128,18 @@ export async function GET(
   }
 
   const admin = createSupabaseAdminClient();
-  const { data: signed, error: signError } = await admin.storage.from(getStorageBucketProductFiles()).createSignedUrl(thumbnailPath, COVER_SIGNED_URL_TTL_SECONDS);
+  const { data: signed, error: signError } = await admin.storage
+    .from(getStorageBucketProductFiles())
+    .createSignedUrl(thumbnailPath, COVER_SIGNED_URL_TTL_SECONDS);
   if (signError !== null || signed === null) {
     return json(500, { error: "Génération du lien impossible." });
   }
 
-  return json(200, { ok: true, thumbnailUrl: signed.signedUrl, expiresAt: new Date(Date.now() + COVER_SIGNED_URL_TTL_SECONDS * 1000).toISOString() });
+  return json(200, {
+    ok: true,
+    thumbnailUrl: signed.signedUrl,
+    expiresAt: new Date(Date.now() + COVER_SIGNED_URL_TTL_SECONDS * 1000).toISOString(),
+  });
 }
 
 export async function POST(
@@ -93,7 +152,9 @@ export async function POST(
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (user === null) {
     return json(401, { error: "Connexion requise" });
   }
@@ -104,7 +165,11 @@ export async function POST(
   }
 
   const isOwner = owner.userId === user.id;
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
   const isAdmin = profile?.role === "ADMIN";
   if (!isOwner && !isAdmin) {
     return json(403, { error: "Accès refusé" });
@@ -116,12 +181,23 @@ export async function POST(
     return json(400, { error: "Fichier requis." });
   }
 
-  if (!COVER_ALLOWED_MIME_TYPES.includes(file.type as unknown as typeof COVER_ALLOWED_MIME_TYPES[number])) {
+  if (
+    !COVER_ALLOWED_MIME_TYPES.includes(
+      file.type as unknown as (typeof COVER_ALLOWED_MIME_TYPES)[number],
+    )
+  ) {
     return json(400, { error: "Format non autorisé. JPG, PNG ou WebP uniquement." });
   }
 
   if (file.size === 0 || file.size > COVER_MAX_BYTES) {
-    return json(400, { error: `Image trop volumineuse (max ${COVER_MAX_BYTES / 1024 / 1024} Mo).` });
+    return json(400, {
+      error: `Image trop volumineuse (max ${COVER_MAX_BYTES / 1024 / 1024} Mo).`,
+    });
+  }
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (!hasExpectedImageSignature(file, bytes)) {
+    return json(400, { error: "Le contenu du fichier ne correspond pas au format image annoncé." });
   }
 
   const ext = file.type === "image/jpeg" ? ".jpg" : file.type === "image/png" ? ".png" : ".webp";
@@ -129,17 +205,27 @@ export async function POST(
   const thumbnailPath = `${owner.userId}/products/${productId}/cover/${uuid}${ext}`;
 
   const admin = createSupabaseAdminClient();
-  const { data: uploadData, error: uploadError } = await admin.storage.from(getStorageBucketProductFiles()).upload(thumbnailPath, file, { contentType: file.type, upsert: false });
+  const { data: uploadData, error: uploadError } = await admin.storage
+    .from(getStorageBucketProductFiles())
+    .upload(thumbnailPath, file, { contentType: file.type, upsert: false });
 
   if (uploadError !== null || uploadData === null) {
     return json(500, { error: "Erreur upload image de couverture." });
   }
 
-  const { data: updated, error: updateError } = await supabase.from("products").update({ thumbnail_path: thumbnailPath }).eq("id", productId).select("id").single();
+  const { data: updated, error: updateError } = await supabase
+    .from("products")
+    .update({ thumbnail_path: thumbnailPath })
+    .eq("id", productId)
+    .select("id")
+    .single();
 
   if (updateError !== null || updated === null) {
+    await admin.storage.from(getStorageBucketProductFiles()).remove([thumbnailPath]);
     return json(500, { error: "Impossible d'enregistrer l'image de couverture." });
   }
+
+  revalidatePath(`/vendor/catalogue/${productId}/edit`);
 
   return json(200, { ok: true });
 }
@@ -154,7 +240,9 @@ export async function DELETE(
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (user === null) {
     return json(401, { error: "Connexion requise" });
   }
@@ -165,23 +253,39 @@ export async function DELETE(
   }
 
   const isOwner = owner.userId === user.id;
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
   const isAdmin = profile?.role === "ADMIN";
   if (!isOwner && !isAdmin) {
     return json(403, { error: "Accès refusé" });
   }
 
-  const { data: product } = await supabase.from("products").select("thumbnail_path").eq("id", productId).maybeSingle();
+  const { data: product } = await supabase
+    .from("products")
+    .select("thumbnail_path")
+    .eq("id", productId)
+    .maybeSingle();
   if (!product?.thumbnail_path) {
     return json(404, { error: "Image de couverture absente" });
   }
 
+  const { error: updateError } = await supabase
+    .from("products")
+    .update({ thumbnail_path: null })
+    .eq("id", productId);
+  if (updateError !== null) {
+    return json(500, { error: "Impossible de supprimer l'image de couverture." });
+  }
+
   const admin = createSupabaseAdminClient();
-  await admin.storage.from(getStorageBucketProductFiles()).remove([product.thumbnail_path]).catch(() => {});
-  try {
-    await supabase.from("products").update({ thumbnail_path: null }).eq("id", productId);
-  } catch {
-    // ignore
+  const { error: removeError } = await admin.storage
+    .from(getStorageBucketProductFiles())
+    .remove([product.thumbnail_path]);
+  if (removeError !== null) {
+    return json(500, { error: "Image dissociée, mais sa suppression du stockage a échoué." });
   }
 
   revalidatePath(`/vendor/catalogue/${productId}/edit`);

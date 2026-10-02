@@ -13,5 +13,8 @@ export default defineConfig({
     setupFiles: ["tests/integration/setup-env.ts"],
     hookTimeout: 60_000,
     testTimeout: 30_000,
+    // Le plan Supabase de préproduction limite les connexions Auth : les suites
+    // créent leurs propres comptes et doivent donc s'exécuter séquentiellement.
+    fileParallelism: false,
   },
 });

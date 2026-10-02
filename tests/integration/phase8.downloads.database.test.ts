@@ -138,10 +138,7 @@ async function makeActiveVendorWithProduct(params: {
 }
 
 /** Commande via la vraie RPC checkout (Phase 6), paiement simulÃ© optionnel (Phase 7). */
-async function createOrder(
-  productIds: string[],
-  options: { pay?: boolean } = {},
-): Promise<string> {
+async function createOrder(productIds: string[], options: { pay?: boolean } = {}): Promise<string> {
   const buyer = await sessionFor(`DlBuyer${suffix}`);
   const { data, error } = await buyer.rpc("create_checkout_order", {
     p_product_ids: productIds,
@@ -166,11 +163,7 @@ async function createOrder(
 }
 
 async function firstItemId(orderId: string): Promise<string> {
-  const { data } = await service
-    .from("order_items")
-    .select("id")
-    .eq("order_id", orderId)
-    .limit(1);
+  const { data } = await service.from("order_items").select("id").eq("order_id", orderId).limit(1);
   const id = data?.[0]?.id;
   if (id === undefined) throw new Error("Ligne de commande introuvable");
   return id;

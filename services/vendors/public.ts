@@ -14,10 +14,7 @@ export interface ActiveVendor {
 }
 
 /** Boutiques à afficher publiquement, les plus récentes d'abord. */
-export async function listActiveVendors(
-  db: PublicVendorsDb,
-  limit = 4,
-): Promise<ActiveVendor[]> {
+export async function listActiveVendors(db: PublicVendorsDb, limit = 4): Promise<ActiveVendor[]> {
   const { data, error } = await db
     .from("vendors")
     .select("id, store_name, slug, description, logo_url")

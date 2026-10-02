@@ -103,7 +103,11 @@ async function makePublishedProduct(params: {
   title: string;
   price: string;
 }): Promise<string> {
-  const slug = `${params.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40)}-${Math.random().toString(36).slice(2, 8)}`;
+  const slug = `${params.title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 40)}-${Math.random().toString(36).slice(2, 8)}`;
   const { data, error } = await service
     .from("products")
     .insert({
@@ -121,9 +125,10 @@ async function makePublishedProduct(params: {
 }
 
 /** Passe par la même RPC que le vrai checkout (Phase 6). */
-async function createOrderViaCheckout(
-  productIds: string[],
-): Promise<{ orderId: string; items: Array<{ itemId: string; vendorAmount: string; commissionAmount: string }> }> {
+async function createOrderViaCheckout(productIds: string[]): Promise<{
+  orderId: string;
+  items: Array<{ itemId: string; vendorAmount: string; commissionAmount: string }>;
+}> {
   const client = await buyerClient();
   const { data, error } = await client.rpc("create_checkout_order", {
     p_product_ids: productIds,
@@ -179,8 +184,16 @@ beforeAll(async () => {
   const vw = await makeActiveVendor(`PayVendorW${suffix}`, `payvendorw-${suffix}`);
   vendorWId = vw.vendorRowId;
 
-  pUsd10 = await makePublishedProduct({ vendorRowId: vendorUId, title: "Pay produit dix", price: "10.00" });
-  pUsd999 = await makePublishedProduct({ vendorRowId: vendorWId, title: "Pay produit 999", price: "9.99" });
+  pUsd10 = await makePublishedProduct({
+    vendorRowId: vendorUId,
+    title: "Pay produit dix",
+    price: "10.00",
+  });
+  pUsd999 = await makePublishedProduct({
+    vendorRowId: vendorWId,
+    title: "Pay produit 999",
+    price: "9.99",
+  });
 });
 
 afterAll(async () => {
@@ -223,7 +236,10 @@ describe("Phase 7 — Paiement simulé & idempotence", () => {
     const { data: credits } = await service
       .from("vendor_ledger_entries")
       .select("order_item_id, amount, entry_type")
-      .in("reference", items.map((item) => item.itemId));
+      .in(
+        "reference",
+        items.map((item) => item.itemId),
+      );
     expect(credits?.length).toBe(items.length);
     for (const credit of credits ?? []) {
       expect(credit.entry_type).toBe("SALE_CREDIT");
@@ -233,9 +249,9 @@ describe("Phase 7 — Paiement simulé & idempotence", () => {
     }
     // Somme des crédits + fee = total commande.
     const creditsSum = (credits ?? []).reduce((sum, c) => sum + Number(c.amount), 0);
-    expect(dec(creditsSum + Number((order as { platform_fee: string | number }).platform_fee))).toBe(
-      dec((order as { total: string | number }).total),
-    );
+    expect(
+      dec(creditsSum + Number((order as { platform_fee: string | number }).platform_fee)),
+    ).toBe(dec((order as { total: string | number }).total));
 
     // Audit.
     const { data: audits } = await service
@@ -254,7 +270,10 @@ describe("Phase 7 — Paiement simulé & idempotence", () => {
     const { count: creditsAfterFirst } = await service
       .from("vendor_ledger_entries")
       .select("id", { count: "exact", head: true })
-      .in("reference", items.map((item) => item.itemId));
+      .in(
+        "reference",
+        items.map((item) => item.itemId),
+      );
     expect(creditsAfterFirst).toBe(items.length);
 
     // Rejoue le webhook : no-op silencieux attendu.
@@ -264,7 +283,10 @@ describe("Phase 7 — Paiement simulé & idempotence", () => {
     const { count: creditsAfterReplay } = await service
       .from("vendor_ledger_entries")
       .select("id", { count: "exact", head: true })
-      .in("reference", items.map((item) => item.itemId));
+      .in(
+        "reference",
+        items.map((item) => item.itemId),
+      );
     expect(creditsAfterReplay).toBe(items.length);
 
     const replayed = await paymentFor(orderId);
@@ -279,12 +301,18 @@ describe("Phase 7 — Paiement simulé & idempotence", () => {
 
     // Simule un paiement « en retard » : la commande est déjà payée mais le
     // paiement repasse PENDING (webhook arrivé deux fois dans le désordre).
-    await service.from("payments").update({ status: "PENDING", confirmed_at: null }).eq("id", payment.id);
+    await service
+      .from("payments")
+      .update({ status: "PENDING", confirmed_at: null })
+      .eq("id", payment.id);
 
     const { count: creditsBefore } = await service
       .from("vendor_ledger_entries")
       .select("id", { count: "exact", head: true })
-      .in("reference", items.map((item) => item.itemId));
+      .in(
+        "reference",
+        items.map((item) => item.itemId),
+      );
 
     const { error } = await service.rpc("confirm_order_payment", { p_payment_id: payment.id });
     expect(error).toBeNull();
@@ -296,7 +324,10 @@ describe("Phase 7 — Paiement simulé & idempotence", () => {
     const { count: creditsAfter } = await service
       .from("vendor_ledger_entries")
       .select("id", { count: "exact", head: true })
-      .in("reference", items.map((item) => item.itemId));
+      .in(
+        "reference",
+        items.map((item) => item.itemId),
+      );
     expect(creditsAfter).toBe(creditsBefore);
   });
 
@@ -306,13 +337,19 @@ describe("Phase 7 — Paiement simulé & idempotence", () => {
 
     await service.from("payments").update({ status: "FAILED" }).eq("id", payment.id);
 
-    const { data, error } = await service.rpc("confirm_order_payment", { p_payment_id: payment.id });
+    const { data, error } = await service.rpc("confirm_order_payment", {
+      p_payment_id: payment.id,
+    });
     expect(data ?? null).toBeNull();
     if (error === null) throw new Error("Refus attendu pour un paiement FAILED");
     expect(/non confirmable/i.test(error.message)).toBe(true);
 
     // La commande reste inchangée.
-    const { data: order } = await service.from("orders").select("status").eq("id", orderId).single();
+    const { data: order } = await service
+      .from("orders")
+      .select("status")
+      .eq("id", orderId)
+      .single();
     expect(order?.status).toBe("PENDING");
   });
 
@@ -335,7 +372,11 @@ describe("Phase 7 — Paiement simulé & idempotence", () => {
     expect(anonErr).not.toBeNull();
 
     // La commande n'a PAS été confirmée entre-temps.
-    const { data: order } = await service.from("orders").select("status").eq("id", orderId).single();
+    const { data: order } = await service
+      .from("orders")
+      .select("status")
+      .eq("id", orderId)
+      .single();
     expect(order?.status).toBe("PENDING");
     void buyerId;
   });

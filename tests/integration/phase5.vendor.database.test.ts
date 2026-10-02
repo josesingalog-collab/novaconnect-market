@@ -213,7 +213,10 @@ describe("Phase 5 — Flux vendeur & garde v2", () => {
     expect(prof).toBe("ADMIN");
 
     // Suppression de la boutique → démission ciblée role='VENDOR' → D reste ADMIN.
-    await service.from("vendors").delete().eq("id", shop?.id ?? "");
+    await service
+      .from("vendors")
+      .delete()
+      .eq("id", shop?.id ?? "");
     prof = await readRole(dId);
     expect(prof).toBe("ADMIN");
   });
@@ -245,7 +248,10 @@ describe("Phase 5 — Flux vendeur & garde v2", () => {
       .single();
     expect(row?.status).toBe("PENDING");
 
-    await service.from("vendors").delete().eq("id", shop?.id ?? "");
+    await service
+      .from("vendors")
+      .delete()
+      .eq("id", shop?.id ?? "");
   });
 
   async function readRole(profileId: string): Promise<string | null | undefined> {

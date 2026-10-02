@@ -11,11 +11,11 @@ export function VendorCard({ vendor }: { vendor: ActiveVendor }) {
   return (
     <Link
       href={`/boutique/${vendor.slug}`}
-      className="flex items-center gap-4 rounded-xl border border-zinc-200 bg-white p-4 transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950"
+      className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 transition-shadow hover:shadow-md"
     >
       <span
         aria-hidden
-        className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-100 text-sm font-bold text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400"
+        className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-sm font-bold text-muted-foreground"
       >
         {vendor.logoUrl !== null ? (
           // eslint-disable-next-line @next/next/no-img-element -- URL fournie par le vendeur
@@ -25,10 +25,10 @@ export function VendorCard({ vendor }: { vendor: ActiveVendor }) {
         )}
       </span>
       <span className="min-w-0">
-        <span className="block truncate text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+        <span className="block truncate text-sm font-semibold text-foreground">
           {vendor.storeName}
         </span>
-        <span className="mt-0.5 line-clamp-1 block text-xs text-zinc-500 dark:text-zinc-400">
+        <span className="mt-0.5 line-clamp-1 block text-sm text-muted-foreground">
           {vendor.description ?? "Vendeur de produits numériques"}
         </span>
       </span>

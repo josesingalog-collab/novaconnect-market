@@ -36,19 +36,25 @@ export default async function BecomeVendorPage() {
           Devenir vendeur
         </h1>
         <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-          Un seul compte suffit : ton profil acheteur devient vendeur dès la création
-          de ta boutique — sans nouvelle inscription.
+          Un seul compte suffit : ton profil acheteur devient vendeur dès la création de ta boutique
+          — sans nouvelle inscription.
         </p>
       </div>
 
       {current.kind === "missing-profile" ? (
-        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+        <div
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+        >
           Profil introuvable. Déconnecte-toi puis reconnecte-toi pour réessayer.
         </div>
       ) : current.profile.role === "ADMIN" ? (
         <div className="rounded-xl border border-zinc-200 bg-white p-6 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
           Les administrateurs gèrent les validations de boutiques depuis la{" "}
-          <Link href="/admin" className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100">
+          <Link
+            href="/admin"
+            className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
+          >
             console admin
           </Link>{" "}
           ; ils n&apos;ont pas besoin d&apos;une boutique dédiée.
@@ -76,7 +82,10 @@ export default async function BecomeVendorPage() {
             <CreateVendorForm />
           </section>
 
-          <Link href="/dashboard" className="inline-block font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100">
+          <Link
+            href="/dashboard"
+            className="inline-block font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
+          >
             ← Retour au tableau de bord
           </Link>
         </>

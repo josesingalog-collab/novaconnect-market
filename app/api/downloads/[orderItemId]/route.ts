@@ -14,8 +14,7 @@ import { getStorageBucketProductFiles } from "@/lib/env";
 
 export const runtime = "nodejs";
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Durée de vie maximale d'une signed URL (règle non négociable n°2). */
 const SIGNED_URL_TTL_SECONDS = 120;

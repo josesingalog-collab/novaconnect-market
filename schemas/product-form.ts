@@ -2,13 +2,10 @@ import { z } from "zod";
 
 export const MAX_COVER_SIZE = 5 * 1024 * 1024;
 
-export const ALLOWED_COVER_MIME_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-] as const;
+export const ALLOWED_COVER_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 
 export const productFormSchema = z.object({
+  productType: z.enum(["SERVICE", "PHYSICAL", "DIGITAL"], { message: "Type de produit invalide" }),
   title: z
     .string()
     .min(3, "Le titre doit comporter au moins 3 caractères")
@@ -21,13 +18,13 @@ export const productFormSchema = z.object({
     .string()
     .max(5000, "La description ne doit pas dépasser 5000 caractères")
     .optional(),
-  price: z.string().min(1, "Le prix est requis").regex(/^\d{1,16}(\.\d{1,2})?$/, "Format de prix invalide"),
+  price: z
+    .string()
+    .min(1, "Le prix est requis")
+    .regex(/^\d{1,16}(\.\d{1,2})?$/, "Format de prix invalide"),
   currency: z.enum(["USD", "CDF"], { message: "Devise invalide" }),
   categoryId: z.string().uuid("Catégorie invalide"),
-  thumbnailUrl: z
-    .string()
-    .url("URL de vignette invalide")
-    .optional(),
+  thumbnailUrl: z.string().url("URL de vignette invalide").optional(),
   thumbnailPath: z.string().optional(),
 });
 

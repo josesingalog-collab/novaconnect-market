@@ -21,14 +21,22 @@ import {
   createProduct,
   updateProduct,
   listMyProducts,
+  updateProductStatus,
+  getMyProduct,
 } from "@/services/products/manage";
 
-function assertOk(result: { ok: boolean; productId?: string; error?: string }): { ok: true; productId: string } {
+function assertOk(result: { ok: boolean; productId?: string; error?: string }): {
+  ok: true;
+  productId: string;
+} {
   if (!result.ok) throw new Error("Expected ok but got error: " + (result.error ?? "unknown"));
   return result as { ok: true; productId: string };
 }
 
-function assertFail(result: { ok: boolean; productId?: string; error?: string }): { ok: false; error: string } {
+function assertFail(result: { ok: boolean; productId?: string; error?: string }): {
+  ok: false;
+  error: string;
+} {
   if (result.ok) throw new Error("Expected error but got ok");
   return result as { ok: false; error: string };
 }
@@ -86,7 +94,10 @@ async function makeUser(fullName: string): Promise<{ user: User; client: Supabas
   return { user: data.user, client };
 }
 
-async function promoteToVendor(user: User, status: "ACTIVE" | "PENDING" | "SUSPENDED" = "ACTIVE"): Promise<string> {
+async function promoteToVendor(
+  user: User,
+  status: "ACTIVE" | "PENDING" | "SUSPENDED" = "ACTIVE",
+): Promise<string> {
   const slug = `shop-${suffix}-${user.id.slice(0, 8)}`;
   const { data, error } = await service
     .from("vendors")
@@ -198,13 +209,15 @@ describe("Phase 9 S2 — Gestion produit vendeur", () => {
 
   it("[T3] Vendeur A change vendor_id vers boutique B → refus RLS", async () => {
     const aClient = await clientFor("ProdManA");
-    const product = assertOk(await createProduct(aClient, vendorAId, {
-      title: `Produit T3 ${suffix}`,
-      price: "5.00",
-      currency: "USD",
-      categoryId: categoryId,
-      thumbnailUrl: "",
-    }));
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        title: `Produit T3 ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
 
     const { error } = await aClient
       .from("products")
@@ -216,13 +229,15 @@ describe("Phase 9 S2 — Gestion produit vendeur", () => {
 
   it("[T4] Vendeur modifie son propre DRAFT → OK", async () => {
     const aClient = await clientFor("ProdManA");
-    const product = assertOk(await createProduct(aClient, vendorAId, {
-      title: `Produit T4 ${suffix}`,
-      price: "15.00",
-      currency: "USD",
-      categoryId: categoryId,
-      thumbnailUrl: "",
-    }));
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        title: `Produit T4 ${suffix}`,
+        price: "15.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
 
     const result = await updateProduct(aClient, product.productId, {
       title: `Produit T4 modifié ${suffix}`,
@@ -247,13 +262,15 @@ describe("Phase 9 S2 — Gestion produit vendeur", () => {
   it("[T5] Vendeur A ne modifie pas produit de B → refus", async () => {
     const aClient = await clientFor("ProdManA");
     const bClient = await clientFor("ProdManB");
-    const productB = assertOk(await createProduct(bClient, vendorBId, {
-      title: `Produit B ${suffix}`,
-      price: "5.00",
-      currency: "USD",
-      categoryId: categoryId,
-      thumbnailUrl: "",
-    }));
+    const productB = assertOk(
+      await createProduct(bClient, vendorBId, {
+        title: `Produit B ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
 
     const result = await updateProduct(aClient, productB.productId, {
       title: `Produit B piraté ${suffix}`,
@@ -268,13 +285,15 @@ describe("Phase 9 S2 — Gestion produit vendeur", () => {
 
   it("[T6] Vendeur passe status → PUBLISHED → refus (guard)", async () => {
     const aClient = await clientFor("ProdManA");
-    const product = assertOk(await createProduct(aClient, vendorAId, {
-      title: `Produit T6 ${suffix}`,
-      price: "5.00",
-      currency: "USD",
-      categoryId: categoryId,
-      thumbnailUrl: "",
-    }));
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        title: `Produit T6 ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
 
     const { error } = await aClient
       .from("products")
@@ -356,13 +375,15 @@ describe("Phase 9 S2 — Gestion produit vendeur", () => {
 
   it("[T10] ADMIN modifie n'importe quel produit → OK", async () => {
     const aClient = await clientFor("ProdManA");
-    const product = assertOk(await createProduct(aClient, vendorAId, {
-      title: `Produit admin ${suffix}`,
-      price: "5.00",
-      currency: "USD",
-      categoryId: categoryId,
-      thumbnailUrl: "",
-    }));
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        title: `Produit admin ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
 
     const adminSupabase = createClient(URL, SERVICE, {
       auth: { autoRefreshToken: false, persistSession: false },
@@ -374,6 +395,331 @@ describe("Phase 9 S2 — Gestion produit vendeur", () => {
       .eq("id", product.productId);
 
     expect(error).toBeNull();
+  });
+
+  it("[T11] DRAFT → PENDING_REVIEW pour propriétaire → OK", async () => {
+    const aClient = await clientFor("ProdManA");
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        title: `Produit T11 ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+        thumbnailPath: `test-cover-${suffix}.jpg`,
+      }),
+    );
+
+    await aClient.from("product_files").insert({
+      product_id: product.productId,
+      storage_path: `test-${suffix}/products/${product.productId}/test.pdf`,
+      file_name: "test.pdf",
+      file_size_bytes: BigInt(1024),
+      mime_type: "application/pdf",
+      version: 1,
+    });
+
+    const result = await updateProductStatus(aClient, product.productId, vendorAId);
+    expect(result.ok).toBe(true);
+
+    const { data } = await service
+      .from("products")
+      .select("status")
+      .eq("id", product.productId)
+      .single();
+    expect(data?.status).toBe("PENDING_REVIEW");
+  });
+
+  it("[T12] Vendeur étranger ne peut pas soumettre → refus", async () => {
+    const aClient = await clientFor("ProdManA");
+    const bClient = await clientFor("ProdManB");
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        title: `Produit T12 ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
+
+    const result = await updateProductStatus(bClient, product.productId, vendorBId);
+    expect(result.ok).toBe(false);
+    expect((result as { ok: false; error: string }).error).toContain("accès refusé");
+  });
+
+  it("[T13] PUBLISHED ne peut pas être soumis", async () => {
+    const aClient = await clientFor("ProdManA");
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        title: `Produit T13 ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
+
+    const adminSupabase = createClient(URL, SERVICE, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    await adminSupabase
+      .from("products")
+      .update({ status: "PUBLISHED" })
+      .eq("id", product.productId);
+
+    const result = await updateProductStatus(aClient, product.productId, vendorAId);
+    expect(result.ok).toBe(false);
+    expect((result as { ok: false; error: string }).error).toContain("déjà publié");
+  });
+
+  it("[T14] Couverture manquante → refus de soumission", async () => {
+    const aClient = await clientFor("ProdManA");
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        title: `Produit T14 ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
+
+    const result = await updateProductStatus(aClient, product.productId, vendorAId);
+    expect(result.ok).toBe(false);
+    expect((result as { ok: false; error: string }).error).toContain("couverture");
+  });
+
+  it("[T15] Fichier numérique manquant → refus de soumission", async () => {
+    const aClient = await clientFor("ProdManA");
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        productType: "DIGITAL",
+        title: `Produit T15 ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailPath: "test/cover.jpg",
+      }),
+    );
+
+    const result = await updateProductStatus(aClient, product.productId, vendorAId);
+    expect(result.ok).toBe(false);
+    expect((result as { ok: false; error: string }).error).toContain("fichier numérique");
+  });
+
+  it("[T16] getMyProduct reflète la présence réelle du fichier", async () => {
+    const aClient = await clientFor("ProdManA");
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        title: `Produit T16 ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
+
+    const fetched = await getMyProduct(aClient, product.productId, vendorAId);
+    expect(fetched).not.toBeNull();
+    expect(fetched?.hasFile).toBe(false);
+  });
+
+  it("[T17] getMyProduct reflète la présence de la couverture", async () => {
+    const aClient = await clientFor("ProdManA");
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        title: `Produit T17 ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
+
+    const fetched = await getMyProduct(aClient, product.productId, vendorAId);
+    expect(fetched).not.toBeNull();
+    expect(fetched?.thumbnailPath).toBeNull();
+  });
+
+  it("[T18] REJECTED peut être soumis → PENDING_REVIEW", async () => {
+    const aClient = await clientFor("ProdManA");
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        productType: "SERVICE",
+        title: `Produit T18 ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
+
+    await aClient.from("products").update({ status: "REJECTED" }).eq("id", product.productId);
+
+    const result = await updateProductStatus(aClient, product.productId, vendorAId);
+    expect(result.ok).toBe(true);
+
+    const { data } = await service
+      .from("products")
+      .select("status")
+      .eq("id", product.productId)
+      .single();
+    expect(data?.status).toBe("PENDING_REVIEW");
+  });
+
+  it("[T19] PENDING_REVIEW ne peut pas être soumis (déjà en cours de vérification)", async () => {
+    const aClient = await clientFor("ProdManA");
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        title: `Produit T19 ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
+
+    await aClient.from("products").update({ status: "PENDING_REVIEW" }).eq("id", product.productId);
+
+    const result = await updateProductStatus(aClient, product.productId, vendorAId);
+    expect(result.ok).toBe(true);
+  });
+
+  it("[T20] PUBLISHED ne peut pas être soumis", async () => {
+    const aClient = await clientFor("ProdManA");
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        title: `Produit T20 ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
+
+    await service.from("products").update({ status: "PUBLISHED" }).eq("id", product.productId);
+
+    const result = await updateProductStatus(aClient, product.productId, vendorAId);
+    expect(result.ok).toBe(false);
+    expect((result as { ok: false; error: string }).error).toContain("déjà publié");
+  });
+
+  it("[T21] getMyProduct retourne categoryName après JOIN", async () => {
+    const aClient = await clientFor("ProdManA");
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        title: `Produit T21 ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
+
+    const fetched = await getMyProduct(aClient, product.productId, vendorAId);
+    expect(fetched).not.toBeNull();
+    expect(fetched?.categoryName).toBeTruthy();
+  });
+
+  it("[T22] listMyProducts retourne categoryName après JOIN", async () => {
+    const aClient = await clientFor("ProdManA");
+
+    await createProduct(aClient, vendorAId, {
+      title: `Produit T22 ${suffix}`,
+      price: "5.00",
+      currency: "USD",
+      categoryId: categoryId,
+      thumbnailUrl: "",
+    });
+
+    const products = await listMyProducts(aClient, vendorAId);
+    const found = products.find((p) => p.title === `Produit T22 ${suffix}`);
+    expect(found).toBeDefined();
+    expect(found?.categoryName).toBeTruthy();
+  });
+
+  it("[T23] Produit PHYSICAL → productType dans getMyProduct", async () => {
+    const aClient = await clientFor("ProdManA");
+    const product = assertOk(
+      await createProduct(aClient, vendorAId, {
+        title: `Produit T23 ${suffix}`,
+        price: "5.00",
+        currency: "USD",
+        categoryId: categoryId,
+        thumbnailUrl: "",
+      }),
+    );
+
+    const fetched = await getMyProduct(aClient, product.productId, vendorAId);
+    expect(fetched).not.toBeNull();
+    expect(fetched?.productType).toBe("PHYSICAL");
+  });
+
+  it("[T24] Produit SERVICE → productType dans getMyProduct", async () => {
+    const aClient = await clientFor("ProdManA");
+    const { createProduct: createFn } = await import("@/services/products/manage");
+    const supabase = createClient(URL, SERVICE, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    const result = await createFn(supabase, vendorAId, {
+      productType: "SERVICE",
+      title: `Produit Service ${suffix}`,
+      price: "50.00",
+      currency: "USD",
+      categoryId: categoryId,
+      thumbnailUrl: "",
+    });
+    const product = assertOk(result);
+
+    const fetched = await getMyProduct(aClient, product.productId, vendorAId);
+    expect(fetched).not.toBeNull();
+    expect(fetched?.productType).toBe("SERVICE");
+  });
+
+  it("[T25] Produit DIGITAL → productType dans getMyProduct", async () => {
+    const aClient = await clientFor("ProdManA");
+    const { createProduct: createFn } = await import("@/services/products/manage");
+    const supabase = createClient(URL, SERVICE, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    const result = await createFn(supabase, vendorAId, {
+      productType: "DIGITAL",
+      title: `Produit Digital ${suffix}`,
+      price: "20.00",
+      currency: "USD",
+      categoryId: categoryId,
+      thumbnailUrl: "",
+    });
+    const product = assertOk(result);
+
+    const fetched = await getMyProduct(aClient, product.productId, vendorAId);
+    expect(fetched).not.toBeNull();
+    expect(fetched?.productType).toBe("DIGITAL");
+  });
+
+  it("[T26] listMyProducts retourne productType", async () => {
+    const aClient = await clientFor("ProdManA");
+    const { createProduct: createFn } = await import("@/services/products/manage");
+    const supabase = createClient(URL, SERVICE, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    await createFn(supabase, vendorAId, {
+      productType: "SERVICE",
+      title: `Produit listType ${suffix}`,
+      price: "5.00",
+      currency: "USD",
+      categoryId: categoryId,
+      thumbnailUrl: "",
+    });
+
+    const products = await listMyProducts(aClient, vendorAId);
+    const found = products.find((p) => p.title === `Produit listType ${suffix}`);
+    expect(found).toBeDefined();
+    expect(found?.productType).toBe("SERVICE");
   });
 });
 

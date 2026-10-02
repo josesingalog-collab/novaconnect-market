@@ -143,7 +143,9 @@ describe("Phase 9 S1 — Guard produit : vendor_id immuable", () => {
       .eq("id", product.id);
 
     expect(error).not.toBeNull();
-    expect((error as { message?: string; code?: string }).message).toContain("Produit non autorise");
+    expect((error as { message?: string; code?: string }).message).toContain(
+      "Produit non autorise",
+    );
 
     const { data: row } = await service
       .from("products")
@@ -236,7 +238,11 @@ describe("Phase 9 S1 — Guard produit : vendor_id immuable", () => {
 
     const { data: cat2 } = await service
       .from("categories")
-      .insert({ name: `Cat2 ${suffix}`, slug: `cat2-${suffix}-${productCounter++}`, is_active: true })
+      .insert({
+        name: `Cat2 ${suffix}`,
+        slug: `cat2-${suffix}-${productCounter++}`,
+        is_active: true,
+      })
       .select("id")
       .single();
     const otherCategoryId = cat2?.id ?? "";
@@ -256,7 +262,11 @@ describe("Phase 9 S1 — Guard produit : vendor_id immuable", () => {
     const aClient = await makeClient("ProdGuardA");
     const { data: cat2 } = await service
       .from("categories")
-      .insert({ name: `Cat3 ${suffix}`, slug: `cat3-${suffix}-${productCounter++}`, is_active: true })
+      .insert({
+        name: `Cat3 ${suffix}`,
+        slug: `cat3-${suffix}-${productCounter++}`,
+        is_active: true,
+      })
       .select("id")
       .single();
     const otherCategoryId = cat2?.id ?? "";
@@ -283,11 +293,7 @@ async function makeClient(name: string): Promise<SupabaseClient> {
   return client;
 }
 
-async function createProduct(
-  client: SupabaseClient,
-  vendorId: string,
-  categoryId: string,
-) {
+async function createProduct(client: SupabaseClient, vendorId: string, categoryId: string) {
   const slug = `prod-guard-${suffix}-${vendorId.slice(0, 8)}-${productCounter++}`;
   const { data, error } = await client
     .from("products")

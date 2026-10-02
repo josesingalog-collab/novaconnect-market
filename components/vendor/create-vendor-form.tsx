@@ -31,7 +31,10 @@ export function CreateVendorForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="description" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+        <label
+          htmlFor="description"
+          className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+        >
           Description <span className="font-normal text-zinc-400">(facultatif)</span>
         </label>
         <textarea
@@ -45,7 +48,10 @@ export function CreateVendorForm() {
       </div>
 
       {state.error !== null && (
-        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-300">
+        <p
+          role="alert"
+          className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-300"
+        >
           {state.error}
         </p>
       )}
@@ -59,9 +65,9 @@ export function CreateVendorForm() {
       </button>
 
       <p className="text-xs leading-5 text-zinc-500 dark:text-zinc-400">
-        Ta boutique est créée immédiatement avec le statut « en attente de validation » :
-        tu peux préparer tes produits, mais elle ne sera visible publiquement qu&apos;après
- validation par un administrateur.
+        Ta boutique est créée immédiatement avec le statut « en attente de validation » : tu peux
+        préparer tes produits, mais elle ne sera visible publiquement qu&apos;après validation par
+        un administrateur.
       </p>
     </form>
   );

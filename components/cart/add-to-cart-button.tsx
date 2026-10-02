@@ -14,7 +14,7 @@ interface AddToCartProduct {
   readonly thumbnailUrl: string | null;
 }
 
-const FEEDBACK: Record<AddToCartResult, string> = {
+export const FEEDBACK: Record<AddToCartResult, string> = {
   added: "✓ Ajouté au panier",
   duplicate: "Déjà dans ton panier",
   "currency-conflict": "Devise différente : vide d'abord ton panier",
@@ -37,13 +37,33 @@ export function AddToCartButton({ product }: { product: AddToCartProduct }) {
           type="button"
           onClick={handleAdd}
           disabled={inCart}
-          className="flex-1 rounded-lg bg-zinc-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-400 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-400"
+          className="flex-1 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
         >
-          {inCart ? "✓ Dans le panier" : "🛒 Ajouter au panier"}
+          {inCart ? (
+            "✓ Dans le panier"
+          ) : (
+            <>
+              <svg
+                className="mr-1 inline-block h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              Ajouter au panier
+            </>
+          )}
         </button>
         <Link
           href="/panier"
-          className="rounded-lg border border-zinc-300 px-4 py-3 text-center text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          className="border-input rounded-lg border bg-background px-4 py-3 text-center text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           Voir
         </Link>
@@ -52,9 +72,7 @@ export function AddToCartButton({ product }: { product: AddToCartProduct }) {
         role={feedback !== null ? "status" : undefined}
         aria-live="polite"
         className={`min-h-5 text-center text-xs ${
-          feedback === FEEDBACK.added
-            ? "font-medium text-emerald-600 dark:text-emerald-400"
-            : "text-zinc-500 dark:text-zinc-400"
+          feedback === FEEDBACK.added ? "font-medium text-success" : "text-muted-foreground"
         }`}
       >
         {feedback ?? "Quantité unique · prix vérifié côté serveur au checkout"}

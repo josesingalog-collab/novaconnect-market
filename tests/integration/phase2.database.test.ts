@@ -169,10 +169,7 @@ describe("Phase 2 — Vendeurs & isolation RLS", () => {
   });
 
   it("l'administration (service) active la boutique", async () => {
-    const { error } = await service
-      .from("vendors")
-      .update({ status: "ACTIVE" })
-      .eq("id", shopAId);
+    const { error } = await service.from("vendors").update({ status: "ACTIVE" }).eq("id", shopAId);
     expect(error).toBeNull();
   });
 
@@ -237,11 +234,7 @@ describe("Phase 2 — Produits & transitions", () => {
     expect(error).toBeNull();
 
     const anon = createClient(URL, ANON, { auth: { persistSession: false } });
-    const { data } = await anon
-      .from("products")
-      .select("id, price")
-      .eq("id", productAId)
-      .single();
+    const { data } = await anon.from("products").select("id, price").eq("id", productAId).single();
     expect(data?.id).toBe(productAId);
     expect(Number(data?.price)).toBe(100);
   });
@@ -330,10 +323,7 @@ describe("Phase 2 — Commande, paiement idempotent, ledger, soldes", () => {
   });
 
   it("l'acheteur lit sa commande mais PAS la table payments (RLS)", async () => {
-    const { data: orders } = await buyer
-      .from("orders")
-      .select("id")
-      .eq("id", orderId);
+    const { data: orders } = await buyer.from("orders").select("id").eq("id", orderId);
     expect(orders ?? []).toHaveLength(1);
 
     const { data: payments } = await buyer.from("payments").select("*");
@@ -343,9 +333,7 @@ describe("Phase 2 — Commande, paiement idempotent, ledger, soldes", () => {
   it("expose les soldes vendeur : comptable 90 / réservé 0 / disponible 90", async () => {
     const { data, error } = await vendorA.rpc("get_my_vendor_balances");
     expect(error).toBeNull();
-    const usd = (data as Array<Record<string, unknown>>)?.find(
-      (row) => row["currency"] === "USD",
-    );
+    const usd = (data as Array<Record<string, unknown>>)?.find((row) => row["currency"] === "USD");
     expect(Number(usd?.["accounting_balance"])).toBe(90);
     expect(Number(usd?.["reserved_amount"])).toBe(0);
     expect(Number(usd?.["available_balance"])).toBe(90);
@@ -353,7 +341,7 @@ describe("Phase 2 — Commande, paiement idempotent, ledger, soldes", () => {
 });
 
 describe("Phase 2 — Retraits : réservation atomique", () => {
-  const PAYOUT = { phone: "+243900000000" };
+  const PAYOUT = { phone: "+243900000000", operator: "Vodacom" };
 
   it("refuse un retrait supérieur au solde disponible", async () => {
     const { error } = await vendorA.rpc("request_withdrawal", {

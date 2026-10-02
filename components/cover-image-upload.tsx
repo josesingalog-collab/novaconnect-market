@@ -1,60 +1,76 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- L'aperçu local peut être une URL blob. */
+
 import { useCallback, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface CoverImageUploadProps {
   productId: string;
   currentThumbnailPath: string | null;
-  onUploadComplete?: () => void;
-  onRemove: () => void;
+  currentThumbnailUrl: string | null;
+  productStatus: string;
 }
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 5 * 1024 * 1024;
 
-export function CoverImageUpload({ productId, currentThumbnailPath, onUploadComplete, onRemove }: CoverImageUploadProps) {
+const isEditable = (status: string) => status === "DRAFT" || status === "REJECTED";
+
+export function CoverImageUpload({
+  productId,
+  currentThumbnailPath,
+  currentThumbnailUrl,
+  productStatus,
+}: CoverImageUploadProps) {
+  const router = useRouter();
   const [dragActive, setDragActive] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editable = isEditable(productStatus);
 
-  const handleFile = useCallback((file: File) => {
-    setError(null);
-    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-      setError("Format non autorisé. JPG, PNG ou WebP uniquement.");
-      return;
-    }
-    if (file.size === 0 || file.size > MAX_SIZE) {
-      setError(`Image trop volumineuse (max 5 Mo).`);
-      return;
-    }
+  const handleFile = useCallback(
+    (file: File) => {
+      setError(null);
+      if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+        setError("Format non autorisé. JPG, PNG ou WebP uniquement.");
+        return;
+      }
+      if (file.size === 0 || file.size > MAX_SIZE) {
+        setError(`Image trop volumineuse (max 5 Mo).`);
+        return;
+      }
 
-    const url = URL.createObjectURL(file);
-    setPreviewUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return url;
-    });
+      const url = URL.createObjectURL(file);
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
 
-    const formData = new FormData();
-    formData.set("file", file);
+      const formData = new FormData();
+      formData.set("file", file);
 
-    setUploading(true);
-    fetch(`/api/products/${productId}/cover`, { method: "POST", body: formData })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.ok) {
-          onUploadComplete?.();
-        } else {
-          setError(data.error ?? "Erreur lors de l'upload.");
-          setPreviewUrl(null);
-        }
-      })
-      .catch(() => setError("Erreur réseau."))
-      .finally(() => setUploading(false));
-  }, [productId, onUploadComplete]);
+      setUploading(true);
+      fetch(`/api/products/${productId}/cover`, { method: "POST", body: formData })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.ok) {
+            router.refresh();
+          } else {
+            setError(data.error ?? "Erreur lors de l&apos;upload.");
+            setPreviewUrl(null);
+          }
+        })
+        .catch(() => setError("Erreur réseau."))
+        .finally(() => setUploading(false));
+    },
+    [productId, router],
+  );
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -63,40 +79,90 @@ export function CoverImageUpload({ productId, currentThumbnailPath, onUploadComp
     else if (e.type === "dragleave") setDragActive(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleFile(file);
-  }, [handleFile]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
+      const file = e.dataTransfer.files?.[0];
+      if (file) handleFile(file);
+    },
+    [handleFile],
+  );
 
   const handleRemove = useCallback(() => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setError(null);
     fetch(`/api/products/${productId}/cover`, { method: "DELETE" }).catch(() => {});
-    onRemove();
-  }, [productId, previewUrl, onRemove]);
+    router.refresh();
+  }, [productId, previewUrl, router]);
+
+  const displayUrl = previewUrl ?? currentThumbnailUrl;
 
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium">Image de couverture</label>
-      {previewUrl ? (
+    <section className="flex flex-col gap-3">
+      {error && <Alert variant="error">{error}</Alert>}
+
+      {!editable && productStatus === "PENDING_REVIEW" && (
+        <Alert variant="info">
+          Votre produit est en cours de vérification. La couverture ne peut pas être modifiée pour
+          le moment.
+        </Alert>
+      )}
+
+      {!editable && productStatus === "PUBLISHED" && (
+        <Alert variant="info">
+          Votre produit est publié. La couverture ne peut pas être modifiée.
+        </Alert>
+      )}
+
+      {!editable && productStatus === "ARCHIVED" && (
+        <Alert variant="info">
+          Votre produit est archivé. La couverture ne peut pas être modifiée.
+        </Alert>
+      )}
+
+      {displayUrl ? (
         <div className="relative">
-          <img src={previewUrl} alt="Aperçu couverture" className="h-48 w-full object-cover rounded-lg border" />
-          <Button variant="destructive" size="sm" onClick={handleRemove} className="absolute top-2 right-2">
-            Supprimer
-          </Button>
+          <img
+            src={displayUrl}
+            alt="Aperçu de la couverture"
+            className="h-48 w-full rounded-lg border object-cover"
+          />
+          {editable && (
+            <>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleRemove}
+                className="absolute top-2 right-2"
+                disabled={uploading}
+              >
+                Supprimer
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute top-2 left-2"
+                disabled={uploading}
+              >
+                Remplacer
+              </Button>
+            </>
+          )}
         </div>
       ) : uploading ? (
         <Skeleton className="h-48 w-full rounded-lg" />
-      ) : currentThumbnailPath ? (
-        <div className="flex items-center gap-2">
+      ) : currentThumbnailPath && !displayUrl ? (
+        <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-4">
           <span className="text-sm text-muted-foreground">Couverture définie</span>
-          <Button variant="outline" size="sm" onClick={handleRemove}>
-            Supprimer
-          </Button>
+          {editable && (
+            <Button variant="outline" size="sm" onClick={handleRemove} disabled={uploading}>
+              Supprimer
+            </Button>
+          )}
         </div>
       ) : (
         <div
@@ -105,17 +171,50 @@ export function CoverImageUpload({ productId, currentThumbnailPath, onUploadComp
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => editable && fileInputRef.current?.click()}
+          role={editable ? "button" : undefined}
+          tabIndex={editable ? 0 : undefined}
+          aria-label={
+            editable
+              ? "Zone de dépôt de couverture. Cliquez ou glissez-déposez une image."
+              : undefined
+          }
+          onKeyDown={
+            editable
+              ? (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }
+              : undefined
+          }
         >
           <div className="flex flex-col items-center gap-1 text-sm text-muted-foreground">
-            <span className="text-2xl">+</span>
-            <span>Glissez ou cliquez pour ajouter</span>
+            <span className="text-2xl" aria-hidden="true">
+              +
+            </span>
+            <span>
+              {editable ? "Glissez ou cliquez pour ajouter" : "Couverture non modifiable"}
+            </span>
             <span className="text-xs">JPG, PNG ou WebP — max 5 Mo</span>
           </div>
         </div>
       )}
-      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }} />
-      {error && <p className="text-xs text-destructive">{error}</p>}
-    </div>
+
+      {editable && (
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleFile(f);
+            e.target.value = "";
+          }}
+        />
+      )}
+    </section>
   );
 }

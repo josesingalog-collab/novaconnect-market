@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { RegisterForm } from "@/components/auth/register-form";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -20,14 +21,20 @@ export default async function RegisterPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center px-6 py-16">
-      <div className="flex w-full max-w-sm flex-col gap-4">
-        <Link
-          href="/"
-          className="text-xs font-medium text-zinc-500 underline-offset-4 hover:underline dark:text-zinc-400"
-        >
-          ← NovaConnect Market
-        </Link>
+    <main className="flex min-h-full flex-1 items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-md flex-col gap-6">
+        <Breadcrumb items={[{ label: "Accueil", href: "/" }, { label: "Inscription" }]} />
+        <div className="flex flex-col gap-2">
+          <Link
+            href="/"
+            className="text-xs font-medium text-muted-foreground underline-offset-4 hover:underline"
+          >
+            ← NovaConnect Market
+          </Link>
+          <p className="text-sm text-muted-foreground">
+            Rejoignez NovaConnect pour acheter ou vendre des produits digitaux.
+          </p>
+        </div>
         <RegisterForm />
       </div>
     </main>

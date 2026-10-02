@@ -23,9 +23,7 @@ export interface ProductFileRow {
   readonly created_at: string;
 }
 
-export type UploadResult =
-  | { ok: true; productFile: ProductFileRow }
-  | { ok: false; error: string };
+export type UploadResult = { ok: true; productFile: ProductFileRow } | { ok: false; error: string };
 
 function mimeTypeToExt(mime: string): string {
   const map: Record<string, string> = {
@@ -74,10 +72,7 @@ async function isProductOwner(
   return data !== null && data !== undefined;
 }
 
-async function currentVersion(
-  db: ProductFilesDb,
-  productId: string,
-): Promise<number> {
+async function currentVersion(db: ProductFilesDb, productId: string): Promise<number> {
   const { data, error } = await db
     .from("product_files")
     .select("version")
@@ -105,7 +100,7 @@ export async function uploadProductFile(
     return { ok: false, error: `Fichier trop volumineux (max ${MAX_FILE_SIZE / 1024 / 1024} Mo).` };
   }
 
-  if (!ALLOWED_MIME_TYPES.includes(file.type as unknown as typeof ALLOWED_MIME_TYPES[number])) {
+  if (!ALLOWED_MIME_TYPES.includes(file.type as unknown as (typeof ALLOWED_MIME_TYPES)[number])) {
     return { ok: false, error: `Type MIME "${file.type}" non autorise.` };
   }
 
@@ -117,8 +112,7 @@ export async function uploadProductFile(
   const ext = mimeTypeToExt(file.type);
   const storagePath = generateStoragePath(userId, productId, ext);
 
-  const { data: uploadData, error: uploadError } = await db
-    .storage
+  const { data: uploadData, error: uploadError } = await db.storage
     .from(getStorageBucketProductFiles())
     .upload(storagePath, file, {
       contentType: file.type,
@@ -142,7 +136,9 @@ export async function uploadProductFile(
       mime_type: file.type,
       version: newVersion,
     })
-    .select("id, product_id, storage_path, file_name, file_size_bytes, mime_type, version, created_at")
+    .select(
+      "id, product_id, storage_path, file_name, file_size_bytes, mime_type, version, created_at",
+    )
     .single();
 
   if (error !== null || data === null) {
@@ -151,4 +147,20 @@ export async function uploadProductFile(
 
   const row = data as unknown as ProductFileRow;
   return { ok: true, productFile: row };
+}
+
+export async function listProductFiles(
+  db: ProductFilesDb,
+  productId: string,
+): Promise<ProductFileRow[]> {
+  const { data, error } = await db
+    .from("product_files")
+    .select(
+      "id, product_id, storage_path, file_name, file_size_bytes, mime_type, version, created_at",
+    )
+    .eq("product_id", productId)
+    .order("created_at", { ascending: false });
+
+  if (error !== null) return [];
+  return (data ?? []) as ProductFileRow[];
 }

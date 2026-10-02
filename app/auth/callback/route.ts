@@ -9,7 +9,8 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const nextParam = searchParams.get("next");
-  const next = typeof nextParam === "string" && nextParam.startsWith("/") ? nextParam : "/dashboard";
+  const next =
+    typeof nextParam === "string" && nextParam.startsWith("/") ? nextParam : "/dashboard";
 
   if (code !== null && code.length > 0) {
     const supabase = await createSupabaseServerClient();

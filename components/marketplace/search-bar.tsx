@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+
 export interface SearchBarParams {
   q?: string;
   tri?: string;
@@ -20,7 +22,7 @@ export function SearchBar({ params }: { params: SearchBarParams }) {
     <form
       method="get"
       action="/catalogue"
-      className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950 sm:flex-row sm:items-center"
+      className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center"
     >
       {params.categorie !== undefined && (
         <input type="hidden" name="categorie" value={params.categorie} />
@@ -31,13 +33,13 @@ export function SearchBar({ params }: { params: SearchBarParams }) {
         defaultValue={params.q ?? ""}
         placeholder="Rechercher un produit…"
         aria-label="Rechercher un produit par titre"
-        className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-100"
+        className="border-input flex-1 rounded-lg border bg-background px-3 py-2.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/20 dark:border-border dark:bg-card dark:text-foreground dark:focus:border-ring"
       />
       <select
         name="tri"
         defaultValue={params.tri ?? "recent"}
         aria-label="Trier les produits"
-        className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+        className="border-input rounded-lg border bg-background px-3 py-2.5 text-sm outline-none dark:border-border dark:bg-card dark:text-foreground"
       >
         {SORT_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>
@@ -45,16 +47,13 @@ export function SearchBar({ params }: { params: SearchBarParams }) {
           </option>
         ))}
       </select>
-      <button
-        type="submit"
-        className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
-      >
+      <Button type="submit" size="sm" className="min-h-[48px]">
         Filtrer
-      </button>
+      </Button>
       {hasFilters && (
         <a
           href="/catalogue"
-          className="text-center text-sm font-medium text-zinc-500 underline-offset-4 hover:underline dark:text-zinc-400"
+          className="text-center text-sm font-medium text-muted-foreground underline-offset-4 hover:underline"
         >
           Réinitialiser
         </a>

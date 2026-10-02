@@ -77,7 +77,10 @@ async function makeUser(fullName: string): Promise<{ user: User; client: Supabas
   return { user: data.user, client };
 }
 
-async function promoteToVendor(user: User, status: "ACTIVE" | "PENDING" | "SUSPENDED" = "ACTIVE"): Promise<string> {
+async function promoteToVendor(
+  user: User,
+  status: "ACTIVE" | "PENDING" | "SUSPENDED" = "ACTIVE",
+): Promise<string> {
   const slug = `shop-${suffix}-${user.id.slice(0, 8)}`;
   const { data, error } = await service
     .from("vendors")

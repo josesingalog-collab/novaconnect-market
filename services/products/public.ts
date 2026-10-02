@@ -24,13 +24,12 @@ export interface PublicProduct {
   /** Description longue — présente uniquement via getPublicProductBySlug. */
   description: string | null;
   thumbnailUrl: string | null;
-  /** Chemin Storage privé de l'image de couverture. Ne jamais exposer directement. */
-  thumbnailPath: string | null;
   /** Montant en decimal string (D-001) ; PostgREST peut sérialiser en nombre (D-016). */
   price: string;
   currency: string;
   publishedAt: string;
   categoryName: string | null;
+  categoryId: string | null;
   categorySlug: string | null;
   storeName: string;
   storeSlug: string;
@@ -59,7 +58,7 @@ export interface PublicVendor {
 
 const PRODUCT_COLUMNS = `
   id, slug, title, short_description, thumbnail_url, thumbnail_path, price, currency, published_at,
-  category:categories ( name, slug ),
+  category:categories ( id, name, slug ),
   vendor:vendors ( store_name, slug )
 `;
 
@@ -75,7 +74,7 @@ interface ProductRow {
   price: string | number;
   currency: string;
   published_at: string;
-  category: { name: string; slug: string } | null;
+  category: { id: string; name: string; slug: string } | null;
   vendor: { store_name: string; slug: string } | null;
 }
 
@@ -87,11 +86,11 @@ function toPublicProduct(row: ProductRow): PublicProduct {
     shortDescription: row.short_description,
     description: row.description ?? null,
     thumbnailUrl: row.thumbnail_url,
-    thumbnailPath: row.thumbnail_path,
     price: String(row.price),
     currency: row.currency,
     publishedAt: row.published_at,
     categoryName: row.category?.name ?? null,
+    categoryId: row.category?.id ?? null,
     categorySlug: row.category?.slug ?? null,
     storeName: row.vendor?.store_name ?? "",
     storeSlug: row.vendor?.slug ?? "",
@@ -211,6 +210,7 @@ export async function listPublicCategories(db: PublicDb): Promise<PublicCategory
   const { data, error } = await db
     .from("categories")
     .select("id, name, slug")
+    .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
   if (error !== null) {
@@ -229,7 +229,14 @@ export async function getPublicVendorBySlug(
     .from("vendors")
     .select("id, store_name, slug, description, logo_url")
     .eq("slug", slug)
-    .maybeSingle<{ id: string; store_name: string; slug: string; description: string | null; logo_url: string | null }>();
+    .eq("status", "ACTIVE")
+    .maybeSingle<{
+      id: string;
+      store_name: string;
+      slug: string;
+      description: string | null;
+      logo_url: string | null;
+    }>();
 
   if (error !== null) {
     throw new Error(`Lecture boutique impossible : ${error.message}`);

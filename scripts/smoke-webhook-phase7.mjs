@@ -87,7 +87,9 @@ try {
   if (pErr !== null) throw new Error(`product : ${pErr.message}`);
 
   // --- Commande PENDING via la vraie RPC de checkout ---
-  const anon = createClient(URL, ANON, { auth: { persistSession: false, autoRefreshToken: false } });
+  const anon = createClient(URL, ANON, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
   const { error: signInErr } = await anon.auth.signInWithPassword({
     email,
     password: "Passw0rd!Smoke",
@@ -99,12 +101,20 @@ try {
   if (checkoutErr !== null) throw new Error(`checkout : ${checkoutErr.message}`);
   const orderId = checkout.order_id;
 
-  const { data: payRows } = await service.from("payments").select("id").eq("order_id", orderId).limit(1);
+  const { data: payRows } = await service
+    .from("payments")
+    .select("id")
+    .eq("order_id", orderId)
+    .limit(1);
   const paymentId = payRows?.[0]?.id;
   if (!paymentId) throw new Error("payment introuvable");
 
   // --- S1 : signature valide → 200, commande PAID ---
-  const body = JSON.stringify({ payment_id: paymentId, provider: "mock", event_type: "payment.confirmed" });
+  const body = JSON.stringify({
+    payment_id: paymentId,
+    provider: "mock",
+    event_type: "payment.confirmed",
+  });
   const sig = createHmac("sha256", SECRET).update(body, "utf8").digest("hex");
 
   const s1 = await postWebhook(body, sig);
@@ -114,7 +124,11 @@ try {
     console.log("S1 ✓ signature valide → 200 {ok:true}");
   }
 
-  const { data: orderAfter } = await service.from("orders").select("status").eq("id", orderId).single();
+  const { data: orderAfter } = await service
+    .from("orders")
+    .select("status")
+    .eq("id", orderId)
+    .single();
   if (orderAfter?.status !== "PAID") {
     fail(`S1bis commande attendue PAID, reçue ${orderAfter?.status}`);
   } else {
@@ -147,7 +161,10 @@ try {
   const { data: credits } = await service
     .from("vendor_ledger_entries")
     .select("id")
-    .in("reference", (items ?? []).map((i) => i.id));
+    .in(
+      "reference",
+      (items ?? []).map((i) => i.id),
+    );
 
   if ((events ?? []).length !== 1) {
     fail(`S3bis événements journalisés attendus 1, reçus ${(events ?? []).length}`);
@@ -173,7 +190,11 @@ try {
       await service.auth.admin.deleteUser(createdUserId);
     }
     if (vendorRowId !== null) await service.from("vendors").delete().eq("id", vendorRowId);
-    console.log(process.exitCode === 1 ? "--- Smoke en échec (nettoyage effectué)" : "--- Smoke OK, nettoyage effectué");
+    console.log(
+      process.exitCode === 1
+        ? "--- Smoke en échec (nettoyage effectué)"
+        : "--- Smoke OK, nettoyage effectué",
+    );
   } catch {
     console.error("Nettoyage partiel — vérifier les fixtures smoke7.");
   }

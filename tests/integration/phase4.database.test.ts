@@ -150,7 +150,10 @@ describe("Phase 4 — Catalogue public (RLS)", () => {
       .single();
     expect(error).toBeNull();
 
-    await service.from("products").update({ status: "PUBLISHED" }).eq("id", inserted?.id ?? "");
+    await service
+      .from("products")
+      .update({ status: "PUBLISHED" })
+      .eq("id", inserted?.id ?? "");
 
     // Filtre par LA catégorie du run (suffixe unique) : la base de dev partagée
     // accumule les fixtures des exécutions précédentes, la page 1 globale n'est
@@ -212,7 +215,10 @@ describe("Phase 4 — Catalogue public (RLS)", () => {
       .single();
     expect(error).toBeNull();
 
-    await service.from("products").update({ status: "PUBLISHED" }).eq("id", inserted?.id ?? "");
+    await service
+      .from("products")
+      .update({ status: "PUBLISHED" })
+      .eq("id", inserted?.id ?? "");
 
     const page = await listPublicProducts(anon);
     expect(page.products.map((p) => p.slug)).not.toContain(`produit-suspendu-${suffix}`);

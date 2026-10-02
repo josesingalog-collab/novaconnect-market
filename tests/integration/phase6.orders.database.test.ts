@@ -94,10 +94,7 @@ interface VendorFixture {
   vendorRowId: string;
 }
 
-async function makeActiveVendor(
-  userName: string,
-  slugBase: string,
-): Promise<VendorFixture> {
+async function makeActiveVendor(userName: string, slugBase: string): Promise<VendorFixture> {
   const { user } = await makeUser(userName);
   const slug = `${slugBase}-${suffix}`;
   const { data: vendor, error: insErr } = await service
@@ -287,10 +284,7 @@ describe("Phase 6 — Checkout & commandes", () => {
     const item999 = order.items.find((item) => item.product_id === pUsd999);
     expect(item999).toBeDefined();
     // Cross-check arrondi : SQL round(9.99*1000/10000, 2) vs lib/money half-up
-    const tsMinor = computeCommissionAmount(
-      decimalStringToMinor("9.99", "USD"),
-      1000n,
-    );
+    const tsMinor = computeCommissionAmount(decimalStringToMinor("9.99", "USD"), 1000n);
     expect(minorToDecimalString(tsMinor, "USD")).toBe(item999?.commission_amount);
     expect(item999?.commission_amount).toBe("1.00");
 
@@ -302,9 +296,7 @@ describe("Phase 6 — Checkout & commandes", () => {
     expect(rows).toHaveLength(2);
     for (const row of rows ?? []) {
       const split =
-        Number(row.commission_amount) +
-        Number(row.vendor_amount) -
-        Number(row.line_total);
+        Number(row.commission_amount) + Number(row.vendor_amount) - Number(row.line_total);
       expect(Math.abs(split)).toBeLessThan(1e-9);
       expect(row.quantity).toBe(1); // produits numériques
     }
@@ -338,10 +330,7 @@ describe("Phase 6 — Checkout & commandes", () => {
 
   it("[T4] prix modifié en base → le serveur fait foi, pas le panier", async () => {
     // Le « panier » du client affichait encore 10.00 ; on change le prix DB.
-    const { error } = await service
-      .from("products")
-      .update({ price: "12.50" })
-      .eq("id", pUsd10);
+    const { error } = await service.from("products").update({ price: "12.50" }).eq("id", pUsd10);
     expect(error).toBeNull();
 
     const aClient = await clientFor(`OrderBuyerA${suffix}`);
@@ -423,17 +412,11 @@ describe("Phase 6 — Checkout & commandes", () => {
 
     // A ne voit PAS la commande de B.
     const aClient = await clientFor(`OrderBuyerA${suffix}`);
-    const { data: seenByA } = await aClient
-      .from("orders")
-      .select("id")
-      .eq("id", bOrder.order_id);
+    const { data: seenByA } = await aClient.from("orders").select("id").eq("id", bOrder.order_id);
     expect(seenByA).toHaveLength(0);
 
     // B voit la sienne.
-    const { data: seenByB } = await bClient
-      .from("orders")
-      .select("id")
-      .eq("id", bOrder.order_id);
+    const { data: seenByB } = await bClient.from("orders").select("id").eq("id", bOrder.order_id);
     expect(seenByB).toHaveLength(1);
 
     // Le vendeur U voit SES lignes (dont celle de B) mais pas celles d'autrui.
@@ -480,7 +463,7 @@ describe("Phase 6 — Checkout & commandes", () => {
 
     const target = (rows ?? []).find((row) => row.id === reference.order_id);
     if (target === undefined) throw new Error("Commande de référence introuvable");
-    expect(target.status).toBe("PENDING");                 // pas de bascule en PAID
+    expect(target.status).toBe("PENDING"); // pas de bascule en PAID
     expect(dec(target.total as string | number)).toBe(reference.total); // montant intact
 
     // Aucune commande fantôme injectée par l'INSERT.

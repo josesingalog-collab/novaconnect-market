@@ -10,7 +10,10 @@ export const profileSchema = z.object({
     .string()
     .trim()
     .max(30, "Numéro trop long (30 maximum)")
-    .regex(/^\+?[0-9\s-]*$/, "Numéro de téléphone invalide (+, chiffres, espaces et tirets uniquement)")
+    .regex(
+      /^\+?[0-9\s-]*$/,
+      "Numéro de téléphone invalide (+, chiffres, espaces et tirets uniquement)",
+    )
     .transform((value) => (value.length === 0 ? null : value)),
   avatarUrl: z
     .union([z.literal(""), z.url("URL d'avatar invalide")])

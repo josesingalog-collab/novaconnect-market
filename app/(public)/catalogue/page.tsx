@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { CategoryPills, type CatalogueRouteParams } from "@/components/marketplace/category-pills";
 import { CataloguePagination } from "@/components/marketplace/pagination";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { SearchBar } from "@/components/marketplace/search-bar";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Badge } from "@/components/ui/badge";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   listPublicCategories,
@@ -13,7 +14,10 @@ import {
 } from "@/services/products/public";
 
 export const metadata: Metadata = {
-  title: "Catalogue",
+  title: "Catalogue — NovaConnect Market",
+  description:
+    "Découvrez des formations, ebooks, templates et ressources numériques pour apprendre, travailler et développer vos projets.",
+  robots: { index: true, follow: true },
 };
 
 const VALID_SORTS: readonly string[] = ["recent", "price_asc", "price_desc"];
@@ -67,24 +71,33 @@ export default async function CataloguePage({
 
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
-      <div className="flex flex-col gap-2">
-        <p className="text-xs font-medium uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
-          NovaConnect Market · Marketplace
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Catalogue{activeCategory !== null ? ` — ${activeCategory.name}` : ""}
+      {/* HÉROS */}
+      <section className="flex flex-col items-center gap-6 py-16 text-center sm:py-24">
+        <Badge variant="outline" className="text-xs font-medium">
+          Catalogue — NovaConnect Market
+        </Badge>
+        <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+          Découvrez des ressources qui vous font avancer.
         </h1>
-      </div>
+        <p className="max-w-xl text-lg leading-8 text-muted-foreground">
+          Formations, ebooks, templates et ressources numériques pour apprendre, travailler et
+          développer vos projets.
+        </p>
+      </section>
 
-      <section aria-label="Filtres du catalogue" className="mt-8 flex flex-col gap-4">
+      {/* RECHERCHE ET FILTRES */}
+      <section aria-label="Recherche et filtres" className="scroll-mt-20">
         <SearchBar params={{ q: params.q, tri: params.tri, categorie: params.categorie }} />
         {categories.length > 0 && (
-          <CategoryPills categories={categories} routeParams={params} />
+          <div className="mt-6">
+            <CategoryPills categories={categories} routeParams={params} />
+          </div>
         )}
       </section>
 
+      {/* RÉSULTATS */}
       {productsPage.total > 0 && (
-        <p className="mt-6 text-sm text-zinc-500 dark:text-zinc-400" role="status">
+        <p className="mt-8 text-sm text-muted-foreground" role="status">
           {productsPage.total} produit{productsPage.total > 1 ? "s" : ""} trouvé
           {productsPage.total > 1 ? "s" : ""}
           {hasActiveFilters ? " avec vos filtres" : ""}
@@ -93,7 +106,7 @@ export default async function CataloguePage({
 
       {productsPage.products.length > 0 ? (
         <>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {productsPage.products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -108,21 +121,37 @@ export default async function CataloguePage({
           </div>
         </>
       ) : (
-        <div className="mt-10 rounded-xl border border-dashed border-zinc-300 p-12 text-center dark:border-zinc-700">
-          <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {hasActiveFilters
-              ? "Aucun produit ne correspond à votre recherche."
-              : "Le catalogue est en préparation — les premiers produits arrivent bientôt."}
-          </p>
-          {hasActiveFilters && (
-            <Link
-              href="/catalogue"
-              className="mt-4 inline-block rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+        <EmptyState
+          icon={
+            <svg
+              className="h-8 w-8 text-muted-foreground"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
             >
-              Voir tout le catalogue
-            </Link>
-          )}
-        </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          }
+          title={
+            hasActiveFilters ? "Aucun produit trouvé" : "Les premiers produits arrivent bientôt"
+          }
+          description={
+            hasActiveFilters
+              ? "Essayez une autre recherche ou choisissez une autre catégorie."
+              : "Découvrez bientôt une sélection de ressources numériques créées par notre communauté."
+          }
+          action={
+            hasActiveFilters
+              ? { label: "Voir tous les produits", href: "/catalogue" }
+              : { label: "Voir le catalogue", href: "/catalogue" }
+          }
+        />
       )}
     </main>
   );
