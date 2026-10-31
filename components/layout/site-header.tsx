@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { logoutAction } from "@/app/actions/auth";
 import { CartBadge } from "@/components/cart/cart-badge";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { getCurrentProfile } from "@/lib/profile";
 import { APP_NAME } from "@/lib/config";
 
@@ -43,6 +44,7 @@ export async function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
+          {connected && <NotificationBell />}
           <CartBadge />
           {connected ? (
             <>
@@ -96,6 +98,7 @@ export async function SiteHeader() {
         </div>
 
         <div className="md:hidden">
+          {connected && <NotificationBell />}
           <CartBadge />
         </div>
 

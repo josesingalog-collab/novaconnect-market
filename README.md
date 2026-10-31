@@ -68,7 +68,7 @@ docs/           architecture.md · decisions.md · database.md…
 - [x] **Phase 6** — Panier + commandes (checkout RPC atomique, re-pricing serveur, snapshots)
 - [x] **Phase 7** — Paiement simulé (webhook HMAC signé idempotent, RPC `confirm_order_payment`, simulation acheteur)
 - [x] **Phase 8** — Livraison numérique sécurisée (RPC `create_download_grant`, bucket privé, signed URL 120 s, audit downloads)
-- [ ] Phase 9 — Ledger + retraits (S1 ✅ vendor_id immuable · S2 ✅ gestion produit · S3 ✅ upload Storage privé · S4 ✅ docs `architecture.md` §Ledger · S5+ ⏳)
+- [x] Phase 9 — Ledger + retraits + notifications (S1 ✅ vendor_id immuable · S2 ✅ gestion produit · S3 ✅ upload Storage privé · S4 ✅ docs `architecture.md` §Ledger · S5 ✅ notifications in-app 0027 + badge + `/dashboard/notifications`)
 - [x] Phase 10 — Back-office admin (modération vendeurs/produits, pipeline retraits)
 - [ ] Phase 11 — Tests & audit sécurité
 - [ ] Phase 12 — Production

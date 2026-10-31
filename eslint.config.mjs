@@ -9,7 +9,7 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   // Override default ignores of eslint-config-next.
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([".next/**", "out/**", "build/**", "savpay/**", "next-env.d.ts"]),
   {
     // Sécurité : le client admin (service role) ne peut être importé que par lui-même.
     files: ["**/*.ts", "**/*.tsx"],

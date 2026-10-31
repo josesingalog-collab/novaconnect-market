@@ -419,6 +419,56 @@ Un message SQL légitime (seuil, solde insuffisant, structure payout, méthode)
 est relancé tel quel pour l'utilisateur ; seul un cas vraiment inattendu est
 englobé dans un message générique.
 
+## Notifications in-app (Phase 9 S5+)
+
+### Table & RLS (0027)
+
+`notifications` : `user_id`, `type` (liste fermée en contrainte CHECK), `title`,
+`body`, `link`, `metadata`, `read_at`, `created_at`. Index partiel sur les
+non lues (`read_at is null`) pour le compteur du badge.
+
+| Garde                          | Effet                                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------------------------ |
+| Policy `notifications_select_own` / `update_own` / `delete_own` | Le destinataire lit / marque / supprime uniquement SES lignes (aucun champ destinataire côté client) |
+| Aucune policy INSERT           | Seule la base (triggers definer) et `service_role` émettent des notifications               |
+| Trigger `trg_notifications_guard` | UPDATE ne peut toucher qu'à `read_at` ; tout autre champ immuable                        |
+
+`notify_user(user_id, type, title, body, link)` — unique point d'écriture
+applicatif, `security definer`, silencieuse si destinataire inconnu.
+
+### Triggers émetteurs (sert-serveur, zéro participation client)
+
+| Événement                                   | Destinataire(s)           | Notification                                            |
+| ------------------------------------------- | ------------------------- | ------------------------------------------------------- |
+| Order PENDING → PAID                        | acheteur                  | `order.paid` → `/dashboard/commandes`                   |
+| Order PENDING → PAID (par ligne de commande)| vendeur de chaque ligne   | `vendor.sale` (part vendeur, devise de la ligne)         |
+| Retrait APPROVED / PROCESSING / PAID / REJECTED / CANCELLED | vendeur    | `withdrawal.<statut>` → `/vendor/finances`              |
+| Produit PUBLISHED                           | vendeur                   | `product.published` → `/vendor/catalogue`               |
+| Produit REJECTED                            | vendeur                   | `product.rejected` (motif de refus)                     |
+| Boutique ACTIVE / SUSPENDED / REJECTED      | vendeur                   | `vendor.<statut>` → `/vendor`                           |
+
+Ces triggers déclenchent dans la transaction definer de `confirm_order_payment`,
+des RPC admin de retrait et des transitions produit/boutique : pas d'écriture
+client possible, cohérence transactionnelle avec l'événement métier. PENDING
+(statut d'insertion initial) n'émet jamais de notification.
+
+### Structure applicative
+
+- `services/notifications/notifications.ts` : lecture RLS (liste triée
+  récent→ancien, limite ≤ 50, compteur non-lues), marquage lu unitaire
+  (UUID validé Zod) et global (UPDATE `read_at` sur non-lues) ;
+- `app/actions/notifications.ts` : Server Actions + `revalidatePath`;
+- `components/notifications/notification-bell.tsx` : cloche header (Server
+  Component, badge non-bloquant en try/catch) ;
+- `/dashboard/notifications` : boîte de notifications (badge type, marquage
+  lu, tout marquer).
+
+### Limites V1
+
+Notification in-app uniquement : aucun e-mail/SMS (D-007 — prestataire non
+choisi, aucune fausse intégration). L'affichage e-mail sera un ajout isolé
+(prestataire → couche notification), sans impact sur ces invariants.
+
 ## Phases
 
 Voir tableau de statut dans `README.md`. Chaque phase se termine par lint + typecheck + tests + build verts et un commit conventionnel.
