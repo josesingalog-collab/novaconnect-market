@@ -311,6 +311,114 @@ Le client ne passe jamais `vendor_id`, `user_id` ou le contenu du fichier
 directement au serveur. Le chemin Storage est forgé serveur côté serveur ; le
 client ne fournit que le `File` brut et l'`productId` (UUID vérifié).
 
+## Ledger & retraits — moteur financier (Phases 7–10)
+
+### Modèle de soldes (§5 cahier des charges)
+
+Aucune colonne « solde » stockée : le solde est **dérivé** à chaque lecture,
+ce qui exclut par construction la corruption du bilan.
+
+```
+balance comptable   = SUM(vendor_ledger_entries.amount)
+montant réservé     = SUM(withdrawals.amount WHERE status IN (PENDING, APPROVED, PROCESSING))
+balance disponible  = comptable − réservé
+```
+
+- RPC vendeur `get_my_vendor_balances()` (0007) : lignes par devise (USD/CDF,
+  aucune conversion croisée D-002) — comptable / réservé / disponible ;
+- `vendor_available_balance(vendor, currency)` : somme disponibles utilisée
+  dans `request_withdrawal`.
+
+### Ledger immuable append-only (0007, D-009)
+
+`vendor_ledger_entries` : `UNIQUE(entry_type, reference)` interdit tout
+double-crédit ou double-débit, y compris hors webhook.
+
+| Garde                                       | Effet                                                                                          |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Trigger `trg_ledger_immutable`              | UPDATE/DELETE interdits pour tout rôle sauf `postgres`/`supabase_admin` (écritures via definer) |
+| Policies RLS                                | SELECT propriétaire/admin uniquement ; aucune policy INSERT/UPDATE/DELETE                       |
+| Crédit `SALE_CREDIT` (référence = order_item_id), inséré par `confirm_order_payment` via `on conflict do nothing` |
+| Débit `WITHDRAWAL_DEBIT` (montant négatif), inséré par le trigger `trg_withdrawals_paid` quand un retrait passe à **PAID** — idempotent via `on conflict (entry_type, reference)`, référence = id du retrait |
+
+Débits : `WITHDRAWAL_DEBIT` (montant négatif) inséré automatiquement par le
+trigger `trg_withdrawals_paid` quand un retrait passe à **PAID** — idempotent
+(`on conflict (entry_type, reference)` avec référence = withdrawal id).
+
+### Statuts & cycles de vie d'un retrait
+
+```
+Transitions imposées par RPC security definer — aucune écriture directe possible :
+Vendeur   : PENDING → CANCELLED            (cancel_my_withdrawal, PENDING only)
+Admin     : PENDING → APPROVED             (approve_withdrawal)
+            APPROVED → PROCESSING          (process_withdrawal)
+            PROCESSING → PAID              (mark_withdrawal_paid → débit ledger)
+            PENDING → REJECTED             (reject_withdrawal)
+```
+
+Chaque RPC admin (0016) :
+
+- vérifie `auth.uid()` + `is_admin()` (profil ADMIN) ;
+- verrouille la ligne (`for update`) ;
+- exige la transition exacte depuis le statut courant — toute autre
+  transition lève « Transition non autorisee » ;
+- renseigne `processed_by` / `processed_at`.
+
+`cancel_my_withdrawal` : `security definer`, propriété résolue par
+`user_id = auth.uid()` (le client ne passe que l'UUID du retrait) et statut
+`PENDING` requis, sinon « Retrait introuvable ou deja traite ».
+
+### Réservation atomique `request_withdrawal` (0007 + 0016)
+
+1. validation montant (> 0) puis structure `payout_details`
+   (`validate_withdrawal_payout` : exactement `{phone, operator}` pour
+   mobile_money / `{account_number, account_name, bank_name}` pour bank) ;
+2. boutique ACTIVE résolue par `user_id = auth.uid()` (jamais côté client) ;
+3. **verrou `for update` sur la ligne `vendors`** — sérialise toutes les
+   opérations du vendeur : deux demandes concurrentes ne peuvent jamais
+   dépasser le disponible ;
+4. seuil lu dans `app_settings.min_withdrawal_minor` (unités MINOR, converti
+   `/100` — D-008) ; devise absent → « Retraits indisponibles pour cette devise » ;
+5. contrôle `amount <= disponible` puis INSERT `withdrawals` en statut
+   PENDING (réservation). La réservation se libère automatiquement dès que le
+   retrait sort des statuts actifs : CANCELLED / REJECTED, ou PAID (qui devient
+   un débit ledger). Aucun solde stocké à annuler.
+
+### MFA obligatoire (0023)
+
+Fonds = écriture sensible : le trigger `trg_withdrawals_require_mfa`
+(`guard_withdrawal_write`) s'exécute sur tout INSERT/UPDATE/DELETE de
+`withdrawals` et exige, pour tout rôle autre que `service_role` :
+
+1. `auth.uid()` présent ;
+2. JWT `aal = 'aal2'` (session avec vérification en deux étapes) ;
+3. profil **ACTIVE**.
+
+La règle est dans la base (pas seulement dans les actions serveur), donc un
+appel RPC direct d'un vendeur sans MFA est rejeté par PostgreSQL. Côté appli,
+`requiresMfaChallenge` (`lib/supabase/mfa.ts`) verrouille les Server Actions
+financières et les redirige vers `/auth/two-factor`.
+
+### Audit
+
+Trigger `audit_withdrawal_status` : chaque changement de statut écrit
+`audit_logs` (`withdrawal.status_change`, from/to). Aucune mise à jour
+manuelle possible de ces tables (RLS sans policy d'écriture, D-013).
+
+### Structure applicative (finances)
+
+| Couche                                | Fichiers                                    | Rôle                                                                        |
+| ------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------- |
+| Services vendeur                      | `services/vendor/finances.ts`               | RPC only (`get_my_vendor_balances`, `request_withdrawal`, `cancel_my_withdrawal`) ; aucun calcul financier côté TS ; erreurs SQL remontées verbatim |
+| Services admin                        | `services/admin/withdrawals.ts`             | Map transition → RPC admin, rôle ADMIN + ACTIVE vérifié serveur, Zod UUID    |
+| Actions serveur                       | `app/actions/finances.ts`, `app/actions/admin-withdrawals.ts` | Auth + rôle + MFA, appels services                          |
+| UI vendeur                            | `components/vendor/finances/*`              | Soldes (comptable/reservé/disponible), formulaire retrait, liste + annulation |
+| UI admin                              | `app/admin/retraits/`, `components/admin/admin-sidebar` | Liste + boutons d'approbation                                      |
+
+Un message SQL légitime (seuil, solde insuffisant, structure payout, méthode)
+est relancé tel quel pour l'utilisateur ; seul un cas vraiment inattendu est
+englobé dans un message générique.
+
 ## Phases
 
 Voir tableau de statut dans `README.md`. Chaque phase se termine par lint + typecheck + tests + build verts et un commit conventionnel.
