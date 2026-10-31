@@ -51,3 +51,6 @@ supabase/.temp/
 AUDIT-*.md
 PHASE-*.md
 FIX-*.md
+
+# legacy draft folder — restored by an external sync (OneDrive/backup); keep out of git
+/savpay
