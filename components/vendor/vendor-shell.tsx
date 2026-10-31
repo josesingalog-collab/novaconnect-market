@@ -22,7 +22,7 @@ export function VendorShell({ children, profile, collapsed }: VendorShellProps) 
           .join(" ")}
       >
         <VendorHeader profile={profile} collapsed={collapsed} />
-        <div className="p-4 lg:p-6">{children}</div>
+        <div className="bg-[#fafbff] p-4 lg:min-h-[calc(100vh-4rem)] lg:p-8">{children}</div>
       </main>
     </div>
   );

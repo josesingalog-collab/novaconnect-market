@@ -40,14 +40,6 @@ export async function SiteFooter() {
                 Catalogue
               </Link>
             </li>
-            <li>
-              <Link
-                href="/catalogue"
-                className="text-primary-foreground/70 transition-colors hover:text-primary-foreground"
-              >
-                Catégories
-              </Link>
-            </li>
           </ul>
         </nav>
 
@@ -57,23 +49,22 @@ export async function SiteFooter() {
           </p>
           <ul className="mt-3 space-y-2 text-sm">
             <li>
-              <a
-                href="/dashboard/devenir-vendeur"
-                className="text-primary-foreground/70 transition-colors hover:text-primary-foreground"
-              >
-                Devenir vendeur
-              </a>
-            </li>
-            {connected && current.profile.role === "VENDOR" && (
-              <li>
+              {connected && current.profile.role === "VENDOR" ? (
                 <Link
                   href="/vendor"
                   className="text-primary-foreground/70 transition-colors hover:text-primary-foreground"
                 >
                   Espace vendeur
                 </Link>
-              </li>
-            )}
+              ) : (
+                <Link
+                  href="/dashboard/devenir-vendeur"
+                  className="text-primary-foreground/70 transition-colors hover:text-primary-foreground"
+                >
+                  Devenir vendeur
+                </Link>
+              )}
+            </li>
           </ul>
         </nav>
 
@@ -82,22 +73,37 @@ export async function SiteFooter() {
             Compte & Aide
           </p>
           <ul className="mt-3 space-y-2 text-sm">
-            <li>
-              <Link
-                href="/login"
-                className="text-primary-foreground/70 transition-colors hover:text-primary-foreground"
-              >
-                Connexion
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/register"
-                className="text-primary-foreground/70 transition-colors hover:text-primary-foreground"
-              >
-                Créer un compte
-              </Link>
-            </li>
+            {connected ? (
+              <>
+                <li>
+                  <Link
+                    href="/dashboard"
+                    className="text-primary-foreground/70 transition-colors hover:text-primary-foreground"
+                  >
+                    Mon espace
+                  </Link>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <Link
+                    href="/login"
+                    className="text-primary-foreground/70 transition-colors hover:text-primary-foreground"
+                  >
+                    Connexion
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/register"
+                    className="text-primary-foreground/70 transition-colors hover:text-primary-foreground"
+                  >
+                    Créer un compte
+                  </Link>
+                </li>
+              </>
+            )}
             <li>
               <a
                 href="mailto:contact@novaconnect.market"

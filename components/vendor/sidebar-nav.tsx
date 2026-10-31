@@ -29,7 +29,7 @@ const NAV_ITEMS = [
     ),
   },
   {
-    label: "Catalogue",
+    label: "Produits",
     href: "/vendor/catalogue",
     icon: (
       <svg
@@ -44,6 +44,26 @@ const NAV_ITEMS = [
           strokeLinejoin="round"
           strokeWidth={1.5}
           d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: "Ventes",
+    href: "/vendor/ventes",
+    icon: (
+      <svg
+        className="h-5 w-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M3 20h18M5 20V10m5 10V4m5 16v-7m5 7V7"
         />
       </svg>
     ),
@@ -97,6 +117,7 @@ export function SidebarNav({ collapsed }: SidebarNavProps) {
           !pathname.startsWith("/vendor/catalogue/nouveau"))
       );
     if (href === "/vendor/catalogue/nouveau") return pathname === "/vendor/catalogue/nouveau";
+    if (href === "/vendor/ventes") return pathname === "/vendor/ventes";
     if (href === "/vendor/finances") return pathname === "/vendor/finances";
     return false;
   };
@@ -104,25 +125,30 @@ export function SidebarNav({ collapsed }: SidebarNavProps) {
   return (
     <aside
       className={[
-        "hidden lg:fixed lg:top-0 lg:left-0 lg:z-30 lg:flex lg:h-screen lg:w-60 lg:flex-col lg:border-r lg:border-border lg:bg-card",
+        "hidden bg-[#3537ba] text-white shadow-xl shadow-primary/20 lg:fixed lg:top-0 lg:left-0 lg:z-30 lg:flex lg:h-screen lg:w-60 lg:flex-col",
         collapsed ? "lg:w-16" : "lg:w-60",
       ]
         .filter(Boolean)
         .join(" ")}
       aria-label="Navigation vendeur"
     >
-      <div className="flex h-14 items-center justify-center border-b border-border">
+      <div className="flex h-20 items-center border-b border-white/10 px-5">
         {!collapsed ? (
-          <span className="text-sm font-bold text-foreground">NovaConnect</span>
+          <span className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 text-sm font-bold">
+              N
+            </span>
+            NovaConnect
+          </span>
         ) : (
-          <span className="text-sm font-bold text-foreground" aria-label="NovaConnect">
+          <span className="text-sm font-bold text-white" aria-label="NovaConnect">
             N
           </span>
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-4" aria-label="Navigation principale">
-        <ul className="flex flex-col gap-0.5 px-2" role="list">
+      <nav className="flex-1 overflow-y-auto py-6" aria-label="Navigation principale">
+        <ul className="flex flex-col gap-1 px-3" role="list">
           {NAV_ITEMS.map((item) => {
             const active = isActive(item.href);
             return (
@@ -130,10 +156,10 @@ export function SidebarNav({ collapsed }: SidebarNavProps) {
                 <Link
                   href={item.href}
                   className={[
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none",
+                    "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary focus-visible:outline-none",
                     active
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                      ? "bg-white text-primary shadow-sm"
+                      : "text-white/75 hover:bg-white/10 hover:text-white",
                   ]
                     .filter(Boolean)
                     .join(" ")}
@@ -150,6 +176,17 @@ export function SidebarNav({ collapsed }: SidebarNavProps) {
           })}
         </ul>
       </nav>
+      {!collapsed && (
+        <div className="m-3 rounded-xl border border-white/15 bg-white/10 p-3 text-xs leading-5 text-white/75">
+          Besoin d&apos;un nouveau produit ?
+          <Link
+            href="/vendor/catalogue/nouveau"
+            className="mt-1 block font-semibold text-white hover:underline"
+          >
+            Commencer maintenant →
+          </Link>
+        </div>
+      )}
     </aside>
   );
 }

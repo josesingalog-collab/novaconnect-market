@@ -3,12 +3,19 @@ import type { CatalogueRouteParams } from "@/components/marketplace/category-pil
 
 function buildHref(params: CatalogueRouteParams, page: number): string {
   const search = new URLSearchParams();
-  if (params.categorie !== undefined) search.set("categorie", encodeURIComponent(params.categorie));
-  if (params.q !== undefined && params.q.length > 0) search.set("q", encodeURIComponent(params.q));
+  if (params.categorie !== undefined) search.set("categorie", params.categorie);
+  if (params.q !== undefined && params.q.length > 0) search.set("q", params.q);
   if (params.tri !== undefined && params.tri !== "recent") search.set("tri", params.tri);
   if (page > 1) search.set("page", String(page));
   const qs = search.toString();
   return qs.length > 0 ? `/catalogue?${qs}` : "/catalogue";
+}
+
+function buildBaseHref(baseHref: string, page: number): string {
+  const url = new URL(baseHref, "https://novaconnect.local");
+  if (page > 1) url.searchParams.set("page", String(page));
+  else url.searchParams.delete("page");
+  return `${url.pathname}${url.search}`;
 }
 
 export function CataloguePagination({
@@ -26,10 +33,10 @@ export function CataloguePagination({
 }) {
   const lastPage = Math.max(1, Math.ceil(total / pageSize));
   const prevHref = baseHref
-    ? `${baseHref}?page=${page - 1}`
+    ? buildBaseHref(baseHref, page - 1)
     : buildHref(routeParams ?? {}, page - 1);
   const nextHref = baseHref
-    ? `${baseHref}?page=${page + 1}`
+    ? buildBaseHref(baseHref, page + 1)
     : buildHref(routeParams ?? {}, page + 1);
 
   if (lastPage <= 1) {

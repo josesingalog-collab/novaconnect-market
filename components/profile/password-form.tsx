@@ -38,12 +38,6 @@ export function PasswordChangeForm() {
           {state.error}
         </Alert>
       )}
-      {state.success && (
-        <Alert variant="success" title="Mot de passe modifié">
-          Mot de passe mis à jour. Votre session reste active.
-        </Alert>
-      )}
-
       <Button type="submit" disabled={pending} variant="default" className="mt-1 self-start">
         {pending ? "Mise à jour…" : "Changer le mot de passe"}
       </Button>

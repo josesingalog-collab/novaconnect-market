@@ -74,6 +74,28 @@ describe("services/vendor/finances", () => {
     ).rejects.toThrow("strictement positif");
   });
 
+  it("requestVendorWithdrawal conserve le motif métier de la RPC", async () => {
+    vi.doMock("@/lib/supabase/server", () => ({
+      createSupabaseServerClient: mockCreateSupabaseServerClient,
+    }));
+    vi.doMock("@/lib/profile", () => ({
+      getCurrentProfile: mockGetCurrentProfile,
+    }));
+    mockRpc.mockResolvedValue({ data: null, error: { message: "Solde insuffisant" } });
+    mockCreateSupabaseServerClient.mockReturnValue(createMockDb());
+
+    const { requestVendorWithdrawal } = await import("@/services/vendor/finances");
+
+    await expect(
+      requestVendorWithdrawal({
+        amount: "10.00",
+        currency: "USD",
+        method: "mobile_money",
+        payout: { phone: "+243900000000", operator: "Vodacom" },
+      }),
+    ).rejects.toThrow("Solde disponible insuffisant");
+  });
+
   it("cancelVendorWithdrawal appelle cancel_my_withdrawal", async () => {
     vi.doMock("@/lib/supabase/server", () => ({
       createSupabaseServerClient: mockCreateSupabaseServerClient,

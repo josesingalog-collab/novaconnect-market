@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requiresMfaChallenge } from "@/lib/supabase/mfa";
 import { passwordChangeSchema } from "@/schemas/password";
 
 export interface PasswordFormState {
@@ -28,7 +29,7 @@ function friendlyPasswordError(message: string): string {
  *
  * Passe par supabase.auth.updateUser avec le client serveur à clé anon
  * (session cookie) : aucun privilège élevé, aucune donnée métier touchée.
- * La session courante reste valide après le changement.
+ * La session est fermée après le changement afin d'exiger une nouvelle connexion.
  */
 export async function changePasswordAction(
   _prevState: PasswordFormState,
@@ -53,6 +54,9 @@ export async function changePasswordAction(
   }
 
   const supabase = await createSupabaseServerClient();
+  if (await requiresMfaChallenge(supabase)) {
+    return { error: "Vérification en deux étapes requise.", success: false };
+  }
   const { error } = await supabase.auth.updateUser({
     password: parsed.data.newPassword,
   });
@@ -61,5 +65,6 @@ export async function changePasswordAction(
     return { error: friendlyPasswordError(error.message), success: false };
   }
 
-  return { error: null, success: true };
+  await supabase.auth.signOut();
+  redirect("/login?password=changed");
 }

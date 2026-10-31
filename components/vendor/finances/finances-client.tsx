@@ -118,7 +118,7 @@ function WithdrawalsList({
   );
 }
 
-export function FinancesClient(props: FinancesClientProps) {
+function FinancesContent(props: FinancesClientProps) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const { addToast } = useToast();
@@ -135,29 +135,35 @@ export function FinancesClient(props: FinancesClientProps) {
   };
 
   return (
+    <div className="flex flex-col gap-6">
+      <BalancesSection balances={props.balances} balancesError={props.balancesError} />
+
+      <Card variant="bordered">
+        <CardContent className="pt-6">
+          <WithdrawalForm />
+        </CardContent>
+      </Card>
+
+      <section aria-label="Historique des retraits">
+        <h2 className="mb-4 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+          Historique des retraits
+        </h2>
+        <WithdrawalsList
+          withdrawals={props.withdrawals}
+          withdrawalsError={props.withdrawalsError}
+          onCancel={handleCancel}
+        />
+      </section>
+
+      <ToastContainer />
+    </div>
+  );
+}
+
+export function FinancesClient(props: FinancesClientProps) {
+  return (
     <ToastProvider>
-      <div className="flex flex-col gap-6">
-        <BalancesSection balances={props.balances} balancesError={props.balancesError} />
-
-        <Card variant="bordered">
-          <CardContent className="pt-6">
-            <WithdrawalForm />
-          </CardContent>
-        </Card>
-
-        <section aria-label="Historique des retraits">
-          <h2 className="mb-4 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-            Historique des retraits
-          </h2>
-          <WithdrawalsList
-            withdrawals={props.withdrawals}
-            withdrawalsError={props.withdrawalsError}
-            onCancel={handleCancel}
-          />
-        </section>
-
-        <ToastContainer />
-      </div>
+      <FinancesContent {...props} />
     </ToastProvider>
   );
 }

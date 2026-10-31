@@ -8,13 +8,7 @@ import type { UserProfile } from "@/lib/profile";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-export function VendorHeader({
-  profile,
-  collapsed,
-}: {
-  profile: UserProfile | null;
-  collapsed?: boolean;
-}) {
+export function VendorHeader({ profile }: { profile: UserProfile | null; collapsed?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
 
@@ -27,16 +21,13 @@ export function VendorHeader({
           !pathname.startsWith("/vendor/catalogue/nouveau"))
       );
     if (href === "/vendor/catalogue/nouveau") return pathname === "/vendor/catalogue/nouveau";
+    if (href === "/vendor/ventes") return pathname === "/vendor/ventes";
     return false;
   };
 
   return (
-    <header
-      className={["w-full", collapsed ? "lg:ml-16" : "lg:ml-60", "lg:pl-6"]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      <div className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-sm lg:px-6">
+    <header className="w-full">
+      <div className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur-sm lg:px-8">
         <div className="flex items-center gap-3">
           <details
             className="lg:hidden"
@@ -90,6 +81,20 @@ export function VendorHeader({
                   >
                     Ajouter un produit
                   </Link>
+                  <Link
+                    href="/vendor/ventes"
+                    className="flex min-h-[44px] items-center rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    aria-current={isActive("/vendor/ventes") ? "page" : undefined}
+                  >
+                    Ventes
+                  </Link>
+                  <Link
+                    href="/vendor/finances"
+                    className="flex min-h-[44px] items-center rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    aria-current={pathname === "/vendor/finances" ? "page" : undefined}
+                  >
+                    Finances
+                  </Link>
                   <hr className="my-1 border-border" />
                   <form action={logoutAction}>
                     <button
@@ -104,7 +109,7 @@ export function VendorHeader({
             </div>
           </details>
           <span className="hidden text-sm font-medium tracking-widest text-muted-foreground uppercase lg:block">
-            Espace vendeur
+            Votre espace boutique
           </span>
         </div>
 
@@ -130,16 +135,11 @@ export function VendorHeader({
                   <p className="text-sm text-muted-foreground">{profile.email}</p>
                 </div>
               </div>
-              <Link href="/dashboard">
-                <Button variant="outline" size="sm" className="hidden lg:inline-flex">
-                  Tableau de bord
+              <Link href="/vendor/catalogue/nouveau">
+                <Button size="sm" className="hidden lg:inline-flex">
+                  Nouveau produit
                 </Button>
               </Link>
-              <form action={logoutAction}>
-                <Button variant="outline" size="sm" type="submit" className="hidden lg:inline-flex">
-                  Déconnexion
-                </Button>
-              </form>
               <Link href="/dashboard">
                 <Button
                   variant="ghost"

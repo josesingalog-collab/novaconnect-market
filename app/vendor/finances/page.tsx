@@ -15,7 +15,7 @@ export default async function FinancesPage() {
 
   if (current.kind === "unauthenticated") {
     return (
-      <div className="mx-auto flex max-w-5xl flex-1 flex-col gap-6 px-4 py-6 lg:px-6 lg:py-8">
+      <div className="mx-auto flex max-w-6xl flex-1 flex-col gap-6 px-4 py-4 lg:px-6 lg:py-5">
         <Alert variant="error" title="Authentification requise">
           Veuillez vous connecter pour accéder à vos finances.
         </Alert>
@@ -25,7 +25,7 @@ export default async function FinancesPage() {
 
   if (current.kind === "missing-profile") {
     return (
-      <div className="mx-auto flex max-w-5xl flex-1 flex-col gap-6 px-4 py-6 lg:px-6 lg:py-8">
+      <div className="mx-auto flex max-w-6xl flex-1 flex-col gap-6 px-4 py-4 lg:px-6 lg:py-5">
         <Alert variant="warning" title="Profil introuvable">
           Votre profil n&apos;a pas pu être chargé. Réessayez plus tard.
         </Alert>
@@ -53,10 +53,10 @@ export default async function FinancesPage() {
   const usdBalance = balances.find((b) => b.currency === "USD");
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-1 flex-col gap-6 px-4 py-6 lg:px-6 lg:py-8">
+    <div className="mx-auto flex max-w-6xl flex-1 flex-col gap-8 px-4 py-4 lg:px-6 lg:py-5">
       <div>
-        <p className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
-          NovaConnect Market
+        <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">
+          Paiements et retraits
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           Mes finances

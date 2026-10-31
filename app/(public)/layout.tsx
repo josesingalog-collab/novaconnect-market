@@ -6,7 +6,9 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <SiteHeader />
-      <div className="flex flex-1 flex-col">{children}</div>
+      <div id="main-content" tabIndex={-1} className="flex flex-1 flex-col">
+        {children}
+      </div>
       <SiteFooter />
     </>
   );

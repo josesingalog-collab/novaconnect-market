@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth/login-form";
-import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -29,22 +28,33 @@ export default async function LoginPage({
     typeof params.next === "string" && params.next.startsWith("/") ? params.next : "/dashboard";
 
   return (
-    <main className="flex min-h-full flex-1 items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-md flex-col gap-6">
-        <Breadcrumb items={[{ label: "Accueil", href: "/" }, { label: "Connexion" }]} />
-        <div className="flex flex-col gap-2">
-          <Link
-            href="/"
-            className="text-xs font-medium text-muted-foreground underline-offset-4 hover:underline"
-          >
-            ← NovaConnect Market
-          </Link>
-          <p className="text-sm text-muted-foreground">
-            Bienvenue sur NovaConnect. Connectez-vous pour accéder à votre espace.
+    <main className="grid min-h-full flex-1 bg-white lg:grid-cols-2">
+      <section className="hidden flex-col justify-between bg-primary p-12 text-white lg:flex">
+        <Link href="/" className="text-xl font-semibold">
+          NovaConnect
+        </Link>
+        <div className="max-w-md">
+          <p className="text-sm font-semibold tracking-[0.16em] text-white/70 uppercase">
+            NovaConnect Market
+          </p>
+          <h1 className="mt-4 text-5xl font-semibold tracking-[-0.05em]">
+            Valorisez vos produits numériques.
+          </h1>
+          <p className="mt-6 text-base leading-7 text-white/75">
+            Achetez, vendez et gérez vos ressources depuis un espace sécurisé.
           </p>
         </div>
-        <LoginForm nextPath={nextPath} />
-      </div>
+        <p className="text-sm text-white/60">NovaConnect, la plateforme des créateurs.</p>
+      </section>
+      <section className="flex items-center justify-center px-5 py-12 sm:px-10">
+        <div className="w-full max-w-md">
+          <Link href="/" className="text-sm font-semibold text-primary hover:underline">
+            ← NovaConnect
+          </Link>
+          <p className="mt-10 text-sm text-muted-foreground">Ravi de vous revoir.</p>
+          <LoginForm nextPath={nextPath} />
+        </div>
+      </section>
     </main>
   );
 }

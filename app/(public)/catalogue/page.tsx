@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CategoryPills, type CatalogueRouteParams } from "@/components/marketplace/category-pills";
+import type { CatalogueRouteParams } from "@/components/marketplace/category-pills";
 import { CataloguePagination } from "@/components/marketplace/pagination";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { SearchBar } from "@/components/marketplace/search-bar";
@@ -87,12 +87,10 @@ export default async function CataloguePage({
 
       {/* RECHERCHE ET FILTRES */}
       <section aria-label="Recherche et filtres" className="scroll-mt-20">
-        <SearchBar params={{ q: params.q, tri: params.tri, categorie: params.categorie }} />
-        {categories.length > 0 && (
-          <div className="mt-6">
-            <CategoryPills categories={categories} routeParams={params} />
-          </div>
-        )}
+        <SearchBar
+          categories={categories}
+          params={{ q: params.q, tri: params.tri, categorie: params.categorie }}
+        />
       </section>
 
       {/* RÉSULTATS */}

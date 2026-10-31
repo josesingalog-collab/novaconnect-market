@@ -6,7 +6,6 @@ import { getPublicVendorBySlug, listPublicProducts } from "@/services/products/p
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/alert";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { CataloguePagination } from "@/components/marketplace/pagination";
 import { MAX_PAGE_SIZE } from "@/services/products/public";
@@ -49,12 +48,14 @@ export default async function ShopPage({
 
   const rawParams = await searchParams;
   const rawPage = typeof rawParams.page === "string" ? rawParams.page : "1";
+  const rawSearch = typeof rawParams.q === "string" ? rawParams.q : "";
   const page = Number.parseInt(rawPage, 10);
   const safePage = Number.isNaN(page) || page < 1 ? 1 : Math.min(page, 1000);
 
   const { products, total } = await listPublicProducts(supabase, {
     vendorId: vendor.id,
     page: safePage,
+    search: rawSearch,
   });
 
   const initials = vendor.storeName
@@ -65,7 +66,7 @@ export default async function ShopPage({
     .join("");
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-10 px-4 py-12 sm:px-6 lg:px-8">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8">
       <Breadcrumb
         items={[
           { label: "Accueil", href: "/" },
@@ -74,9 +75,8 @@ export default async function ShopPage({
         ]}
       />
 
-      {/* HÉRO BOUTIQUE */}
-      <section aria-label="À propos de la boutique">
-        <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:gap-8 sm:text-left">
+      <section aria-label="À propos de la boutique" className="border-b border-border pb-8">
+        <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:items-start sm:gap-6 sm:text-left">
           {/* Avatar */}
           <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted">
             {vendor.logoUrl !== null ? (
@@ -92,12 +92,12 @@ export default async function ShopPage({
           </div>
 
           {/* Infos */}
-          <div className="flex flex-1 flex-col gap-3">
+          <div className="flex flex-1 flex-col gap-2">
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
                 {vendor.storeName}
               </h1>
-              <span className="inline-flex items-center rounded-full border border-success/30 bg-success/10 px-3 py-0.5 text-xs font-medium text-success">
+              <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success">
                 Boutique active
               </span>
             </div>
@@ -112,38 +112,29 @@ export default async function ShopPage({
         </div>
       </section>
 
-      {/* RÉASSURANCE */}
-      <section aria-label="Informations d'achat">
-        <Alert variant="success" title="Achat sécurisé">
-          <ul className="grid gap-2 text-sm">
-            <li className="flex items-center gap-2">
-              <span className="shrink-0 text-success" aria-hidden="true">
-                ✓
-              </span>
-              Produits numériques livrés instantanément après confirmation de commande
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="shrink-0 text-success" aria-hidden="true">
-                ✓
-              </span>
-              Fichiers sécurisés, téléchargement réservé aux acheteurs
-            </li>
-          </ul>
-        </Alert>
-      </section>
-
-      {/* PRODUITS */}
       <section aria-label="Les produits de cette boutique" className="scroll-mt-20">
-        <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-            Les produits de cette boutique
-          </h2>
-          <Link
-            href="/catalogue"
-            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-          >
-            Voir le catalogue complet →
-          </Link>
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground">Les produits</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {total} produit{total > 1 ? "s" : ""} disponible{total > 1 ? "s" : ""}
+            </p>
+          </div>
+          <form className="flex w-full max-w-sm gap-2 sm:w-auto">
+            <label htmlFor="shop-search" className="sr-only">
+              Rechercher dans cette boutique
+            </label>
+            <input
+              id="shop-search"
+              name="q"
+              defaultValue={rawSearch}
+              placeholder="Rechercher un produit"
+              className="border-input h-11 min-w-0 flex-1 rounded-lg border bg-background px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-64"
+            />
+            <Button type="submit" variant="outline" className="h-11 px-4">
+              Trouver
+            </Button>
+          </form>
         </div>
 
         {products.length > 0 ? (
@@ -158,7 +149,7 @@ export default async function ShopPage({
                 page={safePage}
                 pageSize={MAX_PAGE_SIZE}
                 total={total}
-                baseHref={`/boutique/${slug}`}
+                baseHref={`/boutique/${slug}${rawSearch ? `?q=${encodeURIComponent(rawSearch)}` : ""}`}
               />
             </div>
           </>
@@ -187,13 +178,10 @@ export default async function ShopPage({
         )}
       </section>
 
-      {/* CTA retour */}
-      <div className="flex justify-center pb-8">
-        <Link href="/catalogue">
-          <Button variant="outline" size="lg">
-            Découvrir tous les produits
-          </Button>
-        </Link>
+      <div className="flex justify-center pb-4">
+        <Button asChild variant="outline" size="lg">
+          <Link href="/catalogue">Découvrir tous les produits</Link>
+        </Button>
       </div>
     </main>
   );

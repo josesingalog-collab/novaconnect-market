@@ -18,7 +18,8 @@ interface CoverImageUploadProps {
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 5 * 1024 * 1024;
 
-const isEditable = (status: string) => status === "DRAFT" || status === "REJECTED";
+const isEditable = (status: string) =>
+  status === "DRAFT" || status === "REJECTED" || status === "PUBLISHED";
 
 export function CoverImageUpload({
   productId,
@@ -108,12 +109,6 @@ export function CoverImageUpload({
         <Alert variant="info">
           Votre produit est en cours de vérification. La couverture ne peut pas être modifiée pour
           le moment.
-        </Alert>
-      )}
-
-      {!editable && productStatus === "PUBLISHED" && (
-        <Alert variant="info">
-          Votre produit est publié. La couverture ne peut pas être modifiée.
         </Alert>
       )}
 

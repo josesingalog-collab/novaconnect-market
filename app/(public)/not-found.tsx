@@ -40,16 +40,12 @@ export default function NotFound() {
             Cette page n&apos;existe pas ou n&apos;est plus disponible.
           </p>
           <div className="mt-5 flex flex-col gap-3">
-            <Link href="/" className="w-full">
-              <Button size="lg" className="w-full">
-                Retour à l&apos;accueil
-              </Button>
-            </Link>
-            <Link href="/catalogue" className="w-full">
-              <Button variant="outline" size="lg" className="w-full">
-                Voir le catalogue
-              </Button>
-            </Link>
+            <Button asChild size="lg" className="w-full">
+              <Link href="/">Retour à l&apos;accueil</Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="w-full">
+              <Link href="/catalogue">Voir le catalogue</Link>
+            </Button>
           </div>
         </CardContent>
       </Card>

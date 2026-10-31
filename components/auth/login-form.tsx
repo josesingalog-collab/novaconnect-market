@@ -39,6 +39,15 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
         required
       />
 
+      <div className="-mt-2 flex justify-end">
+        <Link
+          href="/forgot-password"
+          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+        >
+          Mot de passe oublié ?
+        </Link>
+      </div>
+
       {state.error !== null && (
         <Alert variant="error" title="Impossible de se connecter">
           {state.error}

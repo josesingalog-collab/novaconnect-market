@@ -9,8 +9,8 @@ export interface CatalogueRouteParams {
 
 function buildHref(params: CatalogueRouteParams, categorieSlug: string | null): string {
   const search = new URLSearchParams();
-  if (categorieSlug !== null) search.set("categorie", encodeURIComponent(categorieSlug));
-  if (params.q !== undefined && params.q.length > 0) search.set("q", encodeURIComponent(params.q));
+  if (categorieSlug !== null) search.set("categorie", categorieSlug);
+  if (params.q !== undefined && params.q.length > 0) search.set("q", params.q);
   if (params.tri !== undefined && params.tri !== "recent") search.set("tri", params.tri);
   const qs = search.toString();
   return qs.length > 0 ? `/catalogue?${qs}` : "/catalogue";
@@ -31,10 +31,7 @@ export function CategoryPills({
       {categories.map((category) => {
         const isActive = onCatalogue && routeParams.categorie === category.slug;
         const nextSlug = isActive ? null : category.slug;
-        const href =
-          onCatalogue || isActive
-            ? buildHref(routeParams, nextSlug)
-            : `/catalogue?categorie=${encodeURIComponent(category.slug)}`;
+        const href = buildHref(routeParams, nextSlug);
 
         return (
           <li key={category.id}>

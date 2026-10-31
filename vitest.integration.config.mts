@@ -10,11 +10,11 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/integration/**/*.test.ts"],
+    globalSetup: ["tests/integration/global-setup.ts"],
     setupFiles: ["tests/integration/setup-env.ts"],
     hookTimeout: 60_000,
     testTimeout: 30_000,
-    // Le plan Supabase de préproduction limite les connexions Auth : les suites
-    // créent leurs propres comptes et doivent donc s'exécuter séquentiellement.
+    // Les suites créent leurs propres comptes et doivent s'exécuter séquentiellement.
     fileParallelism: false,
   },
 });

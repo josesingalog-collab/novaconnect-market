@@ -85,7 +85,11 @@ function toPublicProduct(row: ProductRow): PublicProduct {
     title: row.title,
     shortDescription: row.short_description,
     description: row.description ?? null,
-    thumbnailUrl: row.thumbnail_url,
+    // New covers live in a private bucket. The route verifies publication before
+    // redirecting the browser to a short-lived storage URL.
+    thumbnailUrl: row.thumbnail_path
+      ? `/api/products/${row.id}/thumbnail`
+      : row.thumbnail_url,
     price: String(row.price),
     currency: row.currency,
     publishedAt: row.published_at,

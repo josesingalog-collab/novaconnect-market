@@ -28,6 +28,8 @@ const RAW_NEXT_PUBLIC_APP_URL = process.env["NEXT_PUBLIC_APP_URL"];
 const RAW_PAYMENT_PROVIDER = process.env["PAYMENT_PROVIDER"];
 const RAW_PAYMENT_WEBHOOK_SECRET = process.env["PAYMENT_WEBHOOK_SECRET"];
 const RAW_STORAGE_BUCKET_PRODUCT_FILES = process.env["STORAGE_BUCKET_PRODUCT_FILES"];
+const RAW_STORAGE_BUCKET_VENDOR_LOGOS = process.env["STORAGE_BUCKET_VENDOR_LOGOS"];
+const RAW_NODE_ENV = process.env["NODE_ENV"];
 
 function formatEnvIssues(error: z.ZodError): string {
   return error.issues
@@ -92,6 +94,11 @@ export function getPaymentProviderId(): PaymentProviderId {
   return "mock";
 }
 
+/** Le provider mock ne doit jamais créditer une commande en production. */
+export function canSimulatePayments(): boolean {
+  return RAW_NODE_ENV !== "production";
+}
+
 /** Secret de signature webhook (requis pour valider l'authenticité des webhooks). */
 export function getPaymentWebhookSecret(): string | null {
   const value = RAW_PAYMENT_WEBHOOK_SECRET?.trim();
@@ -100,4 +107,8 @@ export function getPaymentWebhookSecret(): string | null {
 
 export function getStorageBucketProductFiles(): string {
   return RAW_STORAGE_BUCKET_PRODUCT_FILES?.trim() || "product-files";
+}
+
+export function getStorageBucketVendorLogos(): string {
+  return RAW_STORAGE_BUCKET_VENDOR_LOGOS?.trim() || "vendor-logos";
 }

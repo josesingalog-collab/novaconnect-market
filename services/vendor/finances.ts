@@ -169,7 +169,10 @@ export async function requestVendorWithdrawal(
     }
 
     return { id: data as string };
-  } catch {
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
     throw new Error("Erreur lors de la demande de retrait.");
   }
 }

@@ -7,7 +7,6 @@ import { APP_NAME } from "@/lib/config";
 export async function SiteHeader() {
   const current = await getCurrentProfile();
   const connected = current.kind === "ok";
-  const vendorLinkHref = "/dashboard/devenir-vendeur";
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
@@ -24,10 +23,10 @@ export async function SiteHeader() {
 
         <nav aria-label="Navigation principale" className="hidden items-center gap-6 md:flex">
           <Link
-            href="/"
+            href="/#avantages"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            Accueil
+            Avantages
           </Link>
           <Link
             href="/catalogue"
@@ -36,17 +35,11 @@ export async function SiteHeader() {
             Catalogue
           </Link>
           <Link
-            href="/catalogue"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Catégories
-          </Link>
-          <a
             href="/dashboard/devenir-vendeur"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             Devenir vendeur
-          </a>
+          </Link>
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
@@ -102,6 +95,10 @@ export async function SiteHeader() {
           )}
         </div>
 
+        <div className="md:hidden">
+          <CartBadge />
+        </div>
+
         <details className="group relative md:hidden">
           <summary
             aria-label="Ouvrir le menu"
@@ -124,10 +121,10 @@ export async function SiteHeader() {
           </summary>
           <div className="absolute top-12 right-0 flex w-60 flex-col gap-1 rounded-xl border border-border bg-background p-3 shadow-lg">
             <Link
-              href="/"
+              href="/#avantages"
               className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
-              Accueil
+              Avantages
             </Link>
             <Link
               href="/catalogue"
@@ -135,18 +132,12 @@ export async function SiteHeader() {
             >
               Catalogue
             </Link>
-            <Link
-              href="/catalogue"
+              <Link
+                href="/dashboard/devenir-vendeur"
               className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
-              Catégories
+                Devenir vendeur
             </Link>
-            <a
-              href={vendorLinkHref}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              Devenir vendeur
-            </a>
             <hr className="my-1 border-border" />
             {connected ? (
               <>

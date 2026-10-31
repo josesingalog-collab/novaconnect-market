@@ -1,20 +1,23 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getAppUrl } from "@/lib/env";
+import { safeInternalPath } from "@/lib/navigation";
 import { loginSchema, registerSchema } from "@/schemas/auth";
 
 export interface AuthFormState {
   error: string | null;
 }
 
+export interface PasswordResetState {
+  error: string | null;
+  message: string | null;
+}
+
 function friendlyAuthError(message: string): string {
   if (/invalid login credentials/i.test(message)) {
     return "Email ou mot de passe incorrect.";
-  }
-  if (/already registered|already exists/i.test(message)) {
-    return "Un compte existe déjà avec cet email.";
   }
   if (/rate limit/i.test(message)) {
     return "Trop de tentatives. Réessaie dans quelques instants.";
@@ -25,7 +28,7 @@ function friendlyAuthError(message: string): string {
   if (/email not confirmed/i.test(message)) {
     return "Confirme d'abord ton adresse email (lien envoyé par email).";
   }
-  return "Une erreur est survenue. Vérifie tes informations et réessaie.";
+  return "Impossible de finaliser cette demande. Vérifie tes informations et réessaie.";
 }
 
 export async function loginAction(
@@ -51,8 +54,12 @@ export async function loginAction(
     return { error: friendlyAuthError(error.message) };
   }
 
-  const next = String(formData.get("next") ?? "/dashboard");
-  redirect(next.startsWith("/") ? next : "/dashboard");
+  const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  const next = safeInternalPath(String(formData.get("next") ?? ""));
+  if (assurance?.currentLevel === "aal1" && assurance.nextLevel === "aal2") {
+    redirect(`/auth/two-factor?next=${encodeURIComponent(next)}`);
+  }
+  redirect(next);
 }
 
 export async function registerAction(
@@ -71,15 +78,13 @@ export async function registerAction(
   }
 
   const supabase = await createSupabaseServerClient();
-  const headerList = await headers();
-
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
       // Transmis au trigger handle_new_user → profiles.full_name
       data: { full_name: parsed.data.fullName },
-      emailRedirectTo: `${headerList.get("origin") ?? ""}/auth/callback`,
+      emailRedirectTo: `${getAppUrl()}/auth/callback`,
     },
   });
 
@@ -95,6 +100,29 @@ export async function registerAction(
 
   return {
     error: "Compte créé. Vérifie ta boîte mail pour confirmer ton adresse.",
+  };
+}
+
+export async function requestPasswordResetAction(
+  _prevState: PasswordResetState,
+  formData: FormData,
+): Promise<PasswordResetState> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    return { error: "Saisis une adresse e-mail valide.", message: null };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${getAppUrl()}/auth/callback?next=${encodeURIComponent("/dashboard/mot-de-passe")}`,
+  });
+  if (error !== null) {
+    return { error: friendlyAuthError(error.message), message: null };
+  }
+
+  return {
+    error: null,
+    message: "Si cette adresse est associée à un compte, un lien de réinitialisation vient d'être envoyé.",
   };
 }
 

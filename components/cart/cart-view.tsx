@@ -109,18 +109,14 @@ export function CartView({ authenticated }: { authenticated: boolean }) {
           </dl>
 
           {authenticated ? (
-            <Link href="/checkout" className="mt-5 block">
-              <Button variant="default" className="w-full">
-                Passer au checkout
-              </Button>
-            </Link>
+            <Button asChild variant="default" className="mt-5 w-full">
+              <Link href="/checkout">Passer au checkout</Link>
+            </Button>
           ) : (
             <>
-              <Link href="/login?next=/checkout" className="mt-5 block">
-                <Button variant="default" className="w-full">
-                  Se connecter pour commander
-                </Button>
-              </Link>
+              <Button asChild variant="default" className="mt-5 w-full">
+                <Link href="/login?next=/checkout">Se connecter pour commander</Link>
+              </Button>
               <p className="mt-2 text-center text-xs leading-5 text-muted-foreground">
                 Ta commande sera finalisée après connexion.
               </p>

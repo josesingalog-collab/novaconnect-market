@@ -11,14 +11,14 @@ import { initialProductFormState, type ProductFormState } from "@/lib/product-fo
 
 interface SubmitProductFormProps {
   productId: string;
-  productStatus: string;
   productTitle: string;
+  compact?: boolean;
 }
 
 export function SubmitProductForm({
   productId,
-  productStatus,
   productTitle,
+  compact = false,
 }: SubmitProductFormProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -33,16 +33,17 @@ export function SubmitProductForm({
     initialProductFormState,
   );
 
-  const isRejected = productStatus === "REJECTED";
-
   if (state.status === "success") {
+    if (compact) {
+      return <span className="text-xs font-medium text-success">Publié</span>;
+    }
+
     return (
       <div className="flex flex-col gap-3">
         <Alert variant="success">
-          <span className="font-semibold">Produit envoyé !</span>
+          <span className="font-semibold">Produit publié !</span>
           <p className="mt-1">
-            Votre produit est maintenant en cours de vérification. Notre équipe vérifie les
-            informations avant sa publication.
+            Votre produit est maintenant visible dans le catalogue NovaConnect.
           </p>
         </Alert>
         <div className="flex flex-col gap-3">
@@ -58,36 +59,35 @@ export function SubmitProductForm({
   }
 
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-xl font-semibold tracking-tight text-foreground">
-        {isRejected ? "Renvoyer en vérification" : "Envoyer en vérification"}
-      </h2>
+    <section className={compact ? "" : "flex flex-col gap-3"}>
+      {!compact && (
+        <>
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">Publier ce produit</h2>
+          <Alert variant="info">
+            <span className="font-semibold">{productTitle}</span>
+            <p className="mt-1">Après publication, il sera immédiatement visible dans le catalogue.</p>
+          </Alert>
+        </>
+      )}
 
-      {isRejected && (
-        <Alert variant="warning">
-          <span className="font-semibold">Modifications demandées</span>
-          <p className="mt-1">Corrigez les éléments demandés avant de renvoyer votre produit.</p>
+      {state.status === "error" && state.error && (
+        <Alert variant="error" className={compact ? "mb-2" : undefined}>
+          {state.error}
         </Alert>
       )}
 
-      <Alert variant="info">
-        <span className="font-semibold">{productTitle}</span>
-        <p className="mt-1">
-          Notre équipe vérifiera les informations avant sa publication. Le produit ne sera visible
-          qu&apos;après validation.
-        </p>
-      </Alert>
-
-      {state.status === "error" && state.error && <Alert variant="error">{state.error}</Alert>}
-
       {!pending && (
-        <Button onClick={() => setOpen(true)} className="w-full" size="lg">
-          {isRejected ? "Renvoyer en vérification" : "Envoyer en vérification"}
+        <Button
+          onClick={() => setOpen(true)}
+          className={compact ? "w-full justify-start" : "w-full"}
+          size={compact ? "sm" : "lg"}
+        >
+          Publier le produit
         </Button>
       )}
 
       {pending && (
-        <Button disabled className="w-full" size="lg">
+        <Button disabled className={compact ? "w-full justify-start" : "w-full"} size={compact ? "sm" : "lg"}>
           Envoi en cours…
         </Button>
       )}
@@ -95,12 +95,8 @@ export function SubmitProductForm({
       <Modal
         open={open}
         onOpenChange={setOpen}
-        title={isRejected ? "Renvoyer en vérification ?" : "Envoyer en vérification ?"}
-        description={
-          isRejected
-            ? "Votre produit a été rejeté. Après correction, il sera renvoyé à l&apos;équipe NovaConnect pour validation."
-            : "Votre produit sera envoyé à notre équipe pour vérification. Il ne sera visible que après validation."
-        }
+        title="Publier ce produit ?"
+        description="Votre produit sera immédiatement visible dans le catalogue NovaConnect."
         actions={
           <>
             <Button variant="outline" onClick={() => setOpen(false)} disabled={pending}>
@@ -109,18 +105,14 @@ export function SubmitProductForm({
             <form action={formAction}>
               <input type="hidden" name="productId" value={productId} />
               <Button type="submit" disabled={pending}>
-                {pending ? (isRejected ? "Envoi…" : "Envoi…") : isRejected ? "Renvoyer" : "Envoyer"}
+                {pending ? "Publication…" : "Publier"}
               </Button>
             </form>
           </>
         }
         size="sm"
       >
-        <p className="text-sm text-muted-foreground">
-          {isRejected
-            ? "Votre produit sera renvoyé en vérification après les corrections demandées."
-            : "Confirmez l&apos;envoi pour que notre équipe vérifie votre produit."}
-        </p>
+        <p className="text-sm text-muted-foreground">Confirmez la publication de votre produit.</p>
       </Modal>
     </section>
   );

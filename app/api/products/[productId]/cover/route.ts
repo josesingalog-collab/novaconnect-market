@@ -15,6 +15,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getStorageBucketProductFiles } from "@/lib/env";
+import { requiresMfaChallenge } from "@/lib/supabase/mfa";
 
 export const runtime = "nodejs";
 
@@ -63,10 +64,10 @@ function hasExpectedImageSignature(file: File, bytes: Uint8Array): boolean {
 async function getProductOwner(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   productId: string,
-): Promise<{ vendorId: string; userId: string } | null> {
+): Promise<{ vendorId: string; userId: string; productStatus: string } | null> {
   const { data: product } = await supabase
     .from("products")
-    .select("vendor_id")
+    .select("vendor_id, status")
     .eq("id", productId)
     .single();
   if (!product) return null;
@@ -77,7 +78,7 @@ async function getProductOwner(
     .eq("status", "ACTIVE")
     .maybeSingle();
   if (!vendor) return null;
-  return { vendorId: vendor.id, userId: vendor.user_id };
+  return { vendorId: vendor.id, userId: vendor.user_id, productStatus: product.status };
 }
 
 export async function GET(
@@ -96,7 +97,6 @@ export async function GET(
   if (user === null) {
     return json(401, { error: "Connexion requise" });
   }
-
   const { data: product, error } = await supabase
     .from("products")
     .select("thumbnail_path, vendor_id, status")
@@ -114,14 +114,13 @@ export async function GET(
   const isOwner = owner.userId === user.id;
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, status")
     .eq("id", user.id)
     .maybeSingle();
-  const isAdmin = profile?.role === "ADMIN";
+  const isAdmin = profile?.role === "ADMIN" && profile.status === "ACTIVE";
   if (!isOwner && !isAdmin) {
     return json(403, { error: "Accès refusé" });
   }
-
   const thumbnailPath = product.thumbnail_path;
   if (!thumbnailPath) {
     return json(404, { error: "Image de couverture absente" });
@@ -158,7 +157,9 @@ export async function POST(
   if (user === null) {
     return json(401, { error: "Connexion requise" });
   }
-
+  if (await requiresMfaChallenge(supabase)) {
+    return json(403, { error: "Vérification en deux étapes requise." });
+  }
   const owner = await getProductOwner(supabase, productId);
   if (!owner) {
     return json(404, { error: "Vendeur introuvable" });
@@ -167,12 +168,15 @@ export async function POST(
   const isOwner = owner.userId === user.id;
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, status")
     .eq("id", user.id)
     .maybeSingle();
-  const isAdmin = profile?.role === "ADMIN";
+  const isAdmin = profile?.role === "ADMIN" && profile.status === "ACTIVE";
   if (!isOwner && !isAdmin) {
     return json(403, { error: "Accès refusé" });
+  }
+  if (!isAdmin && !["DRAFT", "REJECTED", "PUBLISHED"].includes(owner.productStatus)) {
+    return json(409, { error: "La couverture ne peut pas être modifiée dans cet état." });
   }
 
   const formData = await request.formData();
@@ -246,6 +250,9 @@ export async function DELETE(
   if (user === null) {
     return json(401, { error: "Connexion requise" });
   }
+  if (await requiresMfaChallenge(supabase)) {
+    return json(403, { error: "Vérification en deux étapes requise." });
+  }
 
   const owner = await getProductOwner(supabase, productId);
   if (!owner) {
@@ -255,12 +262,15 @@ export async function DELETE(
   const isOwner = owner.userId === user.id;
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, status")
     .eq("id", user.id)
     .maybeSingle();
-  const isAdmin = profile?.role === "ADMIN";
+  const isAdmin = profile?.role === "ADMIN" && profile.status === "ACTIVE";
   if (!isOwner && !isAdmin) {
     return json(403, { error: "Accès refusé" });
+  }
+  if (!isAdmin && !["DRAFT", "REJECTED", "PUBLISHED"].includes(owner.productStatus)) {
+    return json(409, { error: "La couverture ne peut pas être modifiée dans cet état." });
   }
 
   const { data: product } = await supabase
@@ -272,11 +282,13 @@ export async function DELETE(
     return json(404, { error: "Image de couverture absente" });
   }
 
-  const { error: updateError } = await supabase
+  const { data: updated, error: updateError } = await supabase
     .from("products")
     .update({ thumbnail_path: null })
-    .eq("id", productId);
-  if (updateError !== null) {
+    .eq("id", productId)
+    .select("id")
+    .maybeSingle();
+  if (updateError !== null || updated === null) {
     return json(500, { error: "Impossible de supprimer l'image de couverture." });
   }
 

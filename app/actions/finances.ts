@@ -3,8 +3,14 @@
 import { requestVendorWithdrawal as requestVendorWithdrawalService } from "@/services/vendor/finances";
 import { cancelVendorWithdrawal as cancelVendorWithdrawalService } from "@/services/vendor/finances";
 import { revalidatePath } from "next/cache";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requiresMfaChallenge } from "@/lib/supabase/mfa";
 
 export async function requestWithdrawalAction(formData: FormData) {
+  const supabase = await createSupabaseServerClient();
+  if (await requiresMfaChallenge(supabase)) {
+    throw new Error("Vérification en deux étapes requise.");
+  }
   const amount = formData.get("amount") as string;
   const currency = formData.get("currency") as string;
   const method = formData.get("method") as "mobile_money" | "bank";
@@ -35,6 +41,10 @@ export async function requestWithdrawalAction(formData: FormData) {
 }
 
 export async function cancelWithdrawalAction(withdrawalId: string) {
+  const supabase = await createSupabaseServerClient();
+  if (await requiresMfaChallenge(supabase)) {
+    throw new Error("Vérification en deux étapes requise.");
+  }
   await cancelVendorWithdrawalService(withdrawalId);
   revalidatePath("/vendor/finances");
 }

@@ -6,6 +6,7 @@ import { getCurrentProfile } from "@/lib/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getStorageBucketProductFiles } from "@/lib/env";
+import { requiresMfaChallenge } from "@/lib/supabase/mfa";
 import { productFormSchema } from "@/schemas/product-form";
 import { createProduct, updateProduct, updateProductStatus } from "@/services/products/manage";
 import { type ProductFormState } from "@/lib/product-form-state";
@@ -26,18 +27,14 @@ function parseForm(formData: FormData, extra?: Record<string, string>) {
     categoryId: toStr(formData.get("categoryId")),
     ...extra,
   };
-  const thumbnailUrl = toStr(formData.get("thumbnailUrl"));
-  const thumbnailPath = toStr(formData.get("thumbnailPath"));
-  if (thumbnailUrl) raw.thumbnailUrl = thumbnailUrl;
-  if (thumbnailPath) raw.thumbnailPath = thumbnailPath;
-  if (!raw.productType || !["SERVICE", "PHYSICAL", "DIGITAL"].includes(raw.productType)) {
-    raw.productType = "PHYSICAL";
+  if (raw.productType !== "DIGITAL") {
+    raw.productType = "DIGITAL";
   }
   return productFormSchema.safeParse(raw);
 }
 
 /**
- * Crée un produit en DRAFT pour le vendeur connecté.
+ * Crée un produit technique avant son envoi puis sa publication automatique.
  * vendor_id est déterminé côté serveur à partir du profil.
  */
 export async function createProductAction(
@@ -71,6 +68,13 @@ export async function createProductAction(
   }
 
   const supabase = await createSupabaseServerClient();
+  if (await requiresMfaChallenge(supabase)) {
+    return {
+      status: "error",
+      error: "Vérification en deux étapes requise.",
+      productId: null,
+    };
+  }
 
   const { data: vendor } = await supabase
     .from("vendors")
@@ -139,6 +143,13 @@ export async function updateProductAction(
   }
 
   const supabase = await createSupabaseServerClient();
+  if (await requiresMfaChallenge(supabase)) {
+    return {
+      status: "error",
+      error: "Vérification en deux étapes requise.",
+      productId: null,
+    };
+  }
 
   const { data: vendor } = await supabase
     .from("vendors")
@@ -158,22 +169,6 @@ export async function updateProductAction(
     .maybeSingle();
   if (product === null) {
     return { status: "error", error: "Produit introuvable ou accès refusé.", productId: null };
-  }
-
-  if (product.status === "PENDING_REVIEW") {
-    return {
-      status: "error",
-      error: "Ce produit est actuellement en cours de vérification et ne peut pas être modifié.",
-      productId: null,
-    };
-  }
-
-  if (product.status === "PUBLISHED") {
-    return {
-      status: "error",
-      error: "Ce produit est déjà publié et ne peut pas être modifié depuis cet espace.",
-      productId: null,
-    };
   }
 
   if (product.status === "ARCHIVED") {
@@ -196,14 +191,7 @@ export async function updateProductAction(
 }
 
 /**
- * Soumet un produit à la validation (→ PENDING_REVIEW).
- *
- * Workflow explicite :
- *  - DRAFT → PENDING_REVIEW
- *  - REJECTED → PENDING_REVIEW (après correction)
- *  - PENDING_REVIEW → déjà soumis, refus
- *  - PUBLISHED → refus
- *  - ARCHIVED → refus
+ * Publie directement un produit complet appartenant au vendeur.
  */
 export async function submitProductAction(
   _prevState: ProductFormState,
@@ -232,6 +220,13 @@ export async function submitProductAction(
   }
 
   const supabase = await createSupabaseServerClient();
+  if (await requiresMfaChallenge(supabase)) {
+    return {
+      status: "error",
+      error: "Vérification en deux étapes requise.",
+      productId: null,
+    };
+  }
 
   const { data: vendor } = await supabase
     .from("vendors")
@@ -263,17 +258,7 @@ export async function submitProductAction(
     };
   }
 
-  if (product.status === "DRAFT") {
-    const result = await updateProductStatus(supabase, productId, vendor.id);
-    if (!result.ok) {
-      return { status: "error", error: result.error, productId: null };
-    }
-    revalidatePath(`/vendor/catalogue/${productId}/edit`);
-    revalidatePath("/vendor/catalogue");
-    return { status: "success", error: null, productId };
-  }
-
-  if (product.status === "REJECTED") {
+  if (product.status === "DRAFT" || product.status === "REJECTED") {
     const result = await updateProductStatus(supabase, productId, vendor.id);
     if (!result.ok) {
       return { status: "error", error: result.error, productId: null };
@@ -333,10 +318,58 @@ export async function deleteProductAction(
 
   const supabase = await createSupabaseServerClient();
 
+  if (await requiresMfaChallenge(supabase)) {
+    return {
+      status: "error",
+      error: "Vérification en deux étapes requise.",
+      productId: null,
+    };
+  }
+
+  const { data: vendor } = await supabase
+    .from("vendors")
+    .select("id")
+    .eq("user_id", current.profile.id)
+    .eq("status", "ACTIVE")
+    .maybeSingle();
+  if (vendor === null) {
+    return { status: "error", error: "Boutique introuvable ou non active.", productId: null };
+  }
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("id, slug, thumbnail_path")
+    .eq("id", productId)
+    .eq("vendor_id", vendor.id)
+    .maybeSingle();
+  if (product === null) {
+    return { status: "error", error: "Produit introuvable ou accès refusé.", productId: null };
+  }
+
+  const { data: orderItem } = await supabase
+    .from("order_items")
+    .select("id")
+    .eq("product_id", productId)
+    .limit(1)
+    .maybeSingle();
+  if (orderItem !== null) {
+    return {
+      status: "error",
+      error: "Ce produit a déjà été commandé et ne peut plus être supprimé.",
+      productId: null,
+    };
+  }
+
+  const { data: files } = await supabase
+    .from("product_files")
+    .select("storage_path")
+    .eq("product_id", productId);
+
   const { data, error } = await supabase
     .from("products")
     .delete()
     .eq("id", productId)
+    .eq("vendor_id", vendor.id)
     .select("id")
     .single();
 
@@ -347,8 +380,19 @@ export async function deleteProductAction(
     return { status: "error", error: "Produit introuvable ou accès refusé.", productId: null };
   }
 
+  const storagePaths = [
+    product.thumbnail_path,
+    ...(files ?? []).map((file) => file.storage_path),
+  ].filter((path): path is string => typeof path === "string" && path.length > 0);
+  if (storagePaths.length > 0) {
+    const admin = createSupabaseAdminClient();
+    await admin.storage.from(getStorageBucketProductFiles()).remove(storagePaths);
+  }
+
   revalidatePath("/vendor/catalogue");
   revalidatePath("/vendor");
+  revalidatePath("/catalogue");
+  revalidatePath(`/produit/${product.slug}`);
   return { status: "success", error: null, productId: null };
 }
 
@@ -393,6 +437,11 @@ export async function approveProductAction(
       error: "Seul un ADMIN ACTIVE peut approuver un produit.",
       productId: null,
     };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (await requiresMfaChallenge(supabase)) {
+    return { status: "error", error: "Vérification en deux étapes requise.", productId: null };
   }
 
   const admin = createSupabaseAdminClient();
@@ -471,6 +520,11 @@ export async function rejectProductAction(
     };
   }
 
+  const supabase = await createSupabaseServerClient();
+  if (await requiresMfaChallenge(supabase)) {
+    return { status: "error", error: "Vérification en deux étapes requise.", productId: null };
+  }
+
   const admin = createSupabaseAdminClient();
 
   const { data: product, error } = await admin
@@ -540,6 +594,13 @@ export async function deleteCoverAction(
   }
 
   const supabase = await createSupabaseServerClient();
+  if (await requiresMfaChallenge(supabase)) {
+    return {
+      status: "error",
+      error: "Vérification en deux étapes requise.",
+      productId: null,
+    };
+  }
   const { data: vendor } = await supabase
     .from("vendors")
     .select("id")

@@ -83,6 +83,26 @@ export default async function OrdersPage() {
     itemsByOrderId.set(item.order_id, list);
   }
 
+  const filesByItemId = new Map<
+    string,
+    Array<{ id: string; fileName: string; fileSizeBytes: number }>
+  >();
+  await Promise.all(
+    (paidItems ?? []).map(async (item) => {
+      const { data } = await supabase.rpc("list_order_item_files", { p_order_item: item.id });
+      filesByItemId.set(
+        item.id,
+        ((data ?? []) as Array<{ id: string; file_name: string; file_size_bytes: number }>).map(
+          (file) => ({
+            id: file.id,
+            fileName: file.file_name,
+            fileSizeBytes: Number(file.file_size_bytes),
+          }),
+        ),
+      );
+    }),
+  );
+
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8">
       <div>
@@ -160,12 +180,17 @@ export default async function OrdersPage() {
                           {item.productTitle}
                         </span>
                         {order.status === "PAID" ? (
-                          <a
-                            href={`/api/downloads/${item.id}`}
-                            className="shrink-0 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                          >
-                            Télécharger
-                          </a>
+                          <div className="flex flex-wrap justify-end gap-1.5">
+                            {(filesByItemId.get(item.id) ?? []).map((file) => (
+                              <a
+                                key={file.id}
+                                href={`/api/downloads/${item.id}/${file.id}`}
+                                className="shrink-0 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                              >
+                                Télécharger {file.fileName}
+                              </a>
+                            ))}
+                          </div>
                         ) : null}
                       </li>
                     ))}

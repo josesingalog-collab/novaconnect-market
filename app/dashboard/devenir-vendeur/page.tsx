@@ -27,33 +27,37 @@ export default async function BecomeVendorPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-12">
-      <div>
-        <p className="text-xs font-medium tracking-widest text-zinc-500 uppercase dark:text-zinc-400">
-          NovaConnect Market · Vendeurs
+    <main className="mx-auto grid w-full max-w-5xl flex-1 gap-10 px-6 py-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-start lg:py-20">
+      <section className="rounded-3xl bg-primary p-7 text-primary-foreground lg:sticky lg:top-8">
+        <p className="text-xs font-bold tracking-[0.14em] text-primary-foreground/65 uppercase">
+          NovaConnect · Vendeurs
         </p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Devenir vendeur
-        </h1>
-        <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-          Un seul compte suffit : ton profil acheteur devient vendeur dès la création de ta boutique
-          — sans nouvelle inscription.
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight">Ouvrez votre vitrine.</h1>
+        <p className="mt-4 text-sm leading-6 text-primary-foreground/75">
+          Un seul compte suffit. Votre espace vendeur est activé dès la création de votre boutique.
         </p>
-      </div>
+        <div className="mt-8 border-t border-primary-foreground/15 pt-6">
+          <p className="text-sm font-semibold">Simple et progressif</p>
+          <p className="mt-2 text-sm leading-6 text-primary-foreground/70">
+            Commencez avec les informations essentielles, puis ajoutez vos produits depuis votre
+            tableau de bord.
+          </p>
+        </div>
+      </section>
 
       {current.kind === "missing-profile" ? (
         <div
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+          className="rounded-2xl border border-destructive/20 bg-destructive/10 p-5 text-sm text-destructive"
         >
           Profil introuvable. Déconnecte-toi puis reconnecte-toi pour réessayer.
         </div>
       ) : current.profile.role === "ADMIN" ? (
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 text-sm leading-6 text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400">
-          Les administrateurs gèrent les validations de boutiques depuis la{" "}
+        <div className="rounded-2xl border border-border bg-card p-6 text-sm leading-6 text-muted-foreground shadow-sm">
+          Les administrateurs gèrent la plateforme depuis la{" "}
           <Link
             href="/admin"
-            className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
+            className="font-medium text-primary underline-offset-4 hover:underline"
           >
             console admin
           </Link>{" "}
@@ -61,30 +65,41 @@ export default async function BecomeVendorPage() {
         </div>
       ) : (
         <>
-          <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
-            <h2 className="text-sm font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-              Ce que tu obtiens
-            </h2>
-            <ul className="mt-3 space-y-2 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
+          <section className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold tracking-[0.14em] text-primary uppercase">
+                  Étape 1 sur 1
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+                  Parlez-nous de votre boutique
+                </h2>
+              </div>
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-bold text-primary">
+                1
+              </span>
+            </div>
+            <div className="mt-6 h-1.5 overflow-hidden rounded-full bg-muted">
+              <div className="h-full w-full rounded-full bg-primary" />
+            </div>
+            <ul className="mt-7 space-y-3 rounded-2xl bg-muted/60 p-4 text-sm leading-6 text-muted-foreground">
               {BENEFITS.map((benefit) => (
                 <li key={benefit} className="flex gap-2">
-                  <span aria-hidden>✓</span>
+                  <span aria-hidden className="font-bold text-success">
+                    ✓
+                  </span>
                   <span>{benefit}</span>
                 </li>
               ))}
             </ul>
-          </section>
-
-          <section className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
-            <h2 className="mb-4 text-sm font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
-              Créer ma boutique
-            </h2>
-            <CreateVendorForm />
+            <div className="mt-7">
+              <CreateVendorForm />
+            </div>
           </section>
 
           <Link
             href="/dashboard"
-            className="inline-block font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
+            className="inline-block text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
           >
             ← Retour au tableau de bord
           </Link>

@@ -32,11 +32,21 @@ npm run dev
 | `npm run lint`      | ESLint                             |
 | `npm run typecheck` | TypeScript strict (`tsc --noEmit`) |
 | `npm test`          | Tests Vitest                       |
+| `npm run test:integration` | Tests d'intégration Supabase local |
 | `npm run format`    | Formatage Prettier                 |
+
+### Tests d'intégration
+
+Les tests d'intégration n'utilisent jamais le projet Supabase de production. Configurez soit
+Supabase local avec `npx supabase start`, soit un projet Supabase exclusivement dédié aux tests.
+Renseignez `.env.integration` à partir de `.env.integration.example`, puis lancez
+`npm run test:integration`. Un projet distant exige son identifiant et la confirmation explicite
+`INTEGRATION_REMOTE_TEST_ACKNOWLEDGEMENT=dedicated-test-project`.
 
 ## Structure
 
 ```
+
 app/            Routes Next.js (App Router)
 components/     UI réutilisables (ui · marketplace · vendor · admin)
 lib/            config centrale · env validée · money · clients Supabase

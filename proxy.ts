@@ -51,6 +51,16 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  if (user && isProtected) {
+    const { data: assurance } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (assurance?.currentLevel === "aal1" && assurance.nextLevel === "aal2") {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/auth/two-factor";
+      redirectUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
   return response;
 }
 

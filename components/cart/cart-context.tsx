@@ -43,6 +43,8 @@ interface CartContextValue {
 
 const STORAGE_KEY = "nc-cart-v1";
 const EMPTY: readonly CartItem[] = [];
+const PRICE_PATTERN = /^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/;
+const SUPPORTED_CURRENCIES = new Set(["USD", "CDF"]);
 
 const listeners = new Set<() => void>();
 let cache: readonly CartItem[] | null = null;
@@ -55,7 +57,9 @@ function isValidItem(value: unknown): value is CartItem {
     typeof v["slug"] === "string" &&
     typeof v["title"] === "string" &&
     typeof v["price"] === "string" &&
+    PRICE_PATTERN.test(v["price"]) &&
     typeof v["currency"] === "string" &&
+    SUPPORTED_CURRENCIES.has(v["currency"]) &&
     typeof v["storeName"] === "string" &&
     (v["thumbnailUrl"] === null || typeof v["thumbnailUrl"] === "string")
   );

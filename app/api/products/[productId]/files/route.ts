@@ -8,8 +8,10 @@
  */
 import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentProfile } from "@/lib/profile";
 import { uploadProductFile } from "@/services/products/product-files";
+import { requiresMfaChallenge } from "@/lib/supabase/mfa";
 
 export const runtime = "nodejs";
 
@@ -29,6 +31,9 @@ export async function POST(
   }
 
   const supabase = await createSupabaseServerClient();
+  if (await requiresMfaChallenge(supabase)) {
+    return json(403, { error: "Vérification en deux étapes requise." });
+  }
 
   const { data: vendor } = await supabase
     .from("vendors")
@@ -48,7 +53,12 @@ export async function POST(
     return json(400, { error: "Fichier requis." });
   }
 
-  const result = await uploadProductFile(supabase, profile.profile.id, productId, file);
+  const result = await uploadProductFile(
+    createSupabaseAdminClient(),
+    profile.profile.id,
+    productId,
+    file,
+  );
 
   if (!result.ok) {
     return json(400, { error: result.error });

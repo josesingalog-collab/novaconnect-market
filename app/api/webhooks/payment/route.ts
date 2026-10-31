@@ -11,7 +11,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getPaymentWebhookSecret } from "@/lib/env";
+import { canSimulatePayments, getPaymentWebhookSecret } from "@/lib/env";
 import {
   PAYMENT_SIGNATURE_HEADER,
   deriveEventHash,
@@ -62,6 +62,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
   const payload = parsed.data;
 
+  // Le seul provider V1 est volontairement réservé aux environnements hors production.
+  if (!canSimulatePayments()) {
+    return json(503, { error: "Les webhooks mock sont désactivés en production" });
+  }
+  if (payload.event_type !== "payment.confirmed") {
+    return json(400, { error: "Type d'événement de paiement non pris en charge" });
+  }
+
   if (payload.payment_id === undefined && payload.provider_reference === undefined) {
     return json(400, { error: "payment_id ou provider_reference requis" });
   }
@@ -89,10 +97,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Journal brut — UNIQUE(provider, event_hash). Un hash déjà vu ⇒ rejeu :
   // on accuse réception SANS rejouer la confirmation.
-  const eventHash =
-    typeof (parsedJson as Record<string, unknown>)["event_hash"] === "string"
-      ? ((parsedJson as Record<string, unknown>)["event_hash"] as string)
-      : deriveEventHash(rawBody);
+  const eventHash = deriveEventHash(rawBody);
   const { error: eventError } = await db.from("payment_events").insert({
     payment_id: paymentId,
     provider: payload.provider,

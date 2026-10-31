@@ -3,8 +3,7 @@
  *
  * Le contenu vit dans le bucket Storage privé `product-files`.
  * Les métadonnées vivent dans la table `product_files`.
- * Le remplacement crée une nouvelle version (version +1),
- * l'ancien fichier reste orphelin dans le bucket (V1).
+ * Chaque produit peut proposer jusqu'à trois fichiers distincts.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getStorageBucketProductFiles } from "@/lib/env";
@@ -24,6 +23,7 @@ export interface ProductFileRow {
 }
 
 export type UploadResult = { ok: true; productFile: ProductFileRow } | { ok: false; error: string };
+export const MAX_PRODUCT_FILES = 3;
 
 function mimeTypeToExt(mime: string): string {
   const map: Record<string, string> = {
@@ -64,12 +64,25 @@ async function isProductOwner(
 
   const { data } = await db
     .from("products")
-    .select("id")
+    .select("id, status")
     .eq("id", productId)
     .eq("vendor_id", (vendor as { id: string }).id)
     .maybeSingle();
 
-  return data !== null && data !== undefined;
+  if (
+    data === null ||
+    data === undefined ||
+    !["DRAFT", "REJECTED", "PUBLISHED"].includes((data as { status: string }).status)
+  ) {
+    return false;
+  }
+  const { data: sale } = await db
+    .from("order_items")
+    .select("id")
+    .eq("product_id", productId)
+    .limit(1)
+    .maybeSingle();
+  return sale === null || sale === undefined;
 }
 
 async function currentVersion(db: ProductFilesDb, productId: string): Promise<number> {
@@ -106,7 +119,16 @@ export async function uploadProductFile(
 
   const owner = await isProductOwner(db, userId, productId);
   if (!owner) {
-    return { ok: false, error: "Produit non autorise." };
+    return { ok: false, error: "Les fichiers ne peuvent plus être modifiés après une première vente." };
+  }
+
+  const { count, error: countError } = await db
+    .from("product_files")
+    .select("id", { count: "exact", head: true })
+    .eq("product_id", productId);
+  if (countError !== null) return { ok: false, error: "Impossible de vérifier les fichiers existants." };
+  if ((count ?? 0) >= MAX_PRODUCT_FILES) {
+    return { ok: false, error: `Un produit peut contenir au maximum ${MAX_PRODUCT_FILES} fichiers.` };
   }
 
   const ext = mimeTypeToExt(file.type);

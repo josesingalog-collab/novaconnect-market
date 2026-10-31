@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { CheckoutView } from "@/components/checkout/checkout-view";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { getCurrentProfile } from "@/lib/profile";
+import { canSimulatePayments } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Checkout",
@@ -34,7 +35,19 @@ export default async function CheckoutPage() {
         </h1>
       </div>
 
-      <CheckoutView authenticated={current.kind === "ok"} />
+      <CheckoutView
+        authenticated={current.kind === "ok"}
+        mockPaymentEnabled={canSimulatePayments()}
+        customer={
+          current.kind === "ok"
+            ? {
+                fullName: current.profile.fullName,
+                email: current.profile.email,
+                phone: current.profile.phone,
+              }
+            : null
+        }
+      />
     </main>
   );
 }

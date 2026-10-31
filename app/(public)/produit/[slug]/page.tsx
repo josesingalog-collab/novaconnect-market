@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import { PaymentMethodsSoon } from "@/components/marketplace/payment-methods-soon";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/components/marketplace/format";
@@ -46,9 +47,18 @@ export default async function ProductPage({ params }: PageProps) {
   const similarProductsFiltered = similarProducts.products
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
+  const cartProduct = {
+    productId: product.id,
+    slug: product.slug,
+    title: product.title,
+    price: product.price,
+    currency: product.currency,
+    storeName: product.storeName,
+    thumbnailUrl: product.thumbnailUrl,
+  };
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
+    <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-10 pb-24 sm:px-6 lg:py-14">
       {/* BREADCRUMB */}
       <Breadcrumb
         items={[
@@ -61,34 +71,44 @@ export default async function ProductPage({ params }: PageProps) {
         ]}
       />
 
+      <h1 className="mt-8 text-3xl font-semibold tracking-tight text-foreground lg:hidden">
+        {product.title}
+      </h1>
+
       {/* HÉRO PRODUIT */}
-      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 items-start gap-8 lg:mt-8 lg:grid-cols-[minmax(20rem,0.78fr)_minmax(0,1.22fr)] lg:items-center lg:gap-12">
         {/* Visuel */}
-        <div className="flex aspect-video overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="mx-auto flex aspect-square w-full max-w-lg rounded-2xl border border-border bg-muted p-3 shadow-sm sm:p-4 lg:mx-0">
           {product.thumbnailUrl !== null ? (
             // eslint-disable-next-line @next/next/no-img-element -- URL externe fournie par le vendeur
             <img
               src={product.thumbnailUrl}
               alt={product.title}
-              className="h-full w-full object-cover"
+              className="h-full w-full rounded-xl border border-border/70 bg-card object-contain p-1.5"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-muted text-6xl font-semibold text-muted-foreground">
+            <div className="flex h-full w-full items-center justify-center rounded-xl border border-border/70 bg-card text-6xl font-semibold text-muted-foreground">
               {product.title.charAt(0).toUpperCase()}
             </div>
           )}
         </div>
 
         {/* Infos */}
-        <div className="flex flex-col gap-5">
-          {product.categoryName !== null && <Badge variant="outline">{product.categoryName}</Badge>}
+        <div className="flex min-w-0 flex-col gap-5 lg:py-4">
+          {product.categoryName !== null && (
+            <Badge variant="outline" className="w-fit">
+              {product.categoryName}
+            </Badge>
+          )}
 
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+          <h1 className="hidden text-3xl font-semibold tracking-tight text-foreground lg:block lg:text-5xl">
             {product.title}
           </h1>
 
           {product.shortDescription !== null && (
-            <p className="text-base leading-8 text-muted-foreground">{product.shortDescription}</p>
+            <p className="text-justify text-base leading-8 text-muted-foreground">
+              {product.shortDescription}
+            </p>
           )}
 
           {/* Vendeur */}
@@ -102,23 +122,16 @@ export default async function ProductPage({ params }: PageProps) {
             </Link>
           </div>
 
-          {/* Prix */}
-          <p className="text-4xl font-bold text-foreground">
-            {formatPrice(product.price, product.currency)}
-          </p>
-
-          {/* Ajout panier */}
-          <AddToCartButton
-            product={{
-              productId: product.id,
-              slug: product.slug,
-              title: product.title,
-              price: product.price,
-              currency: product.currency,
-              storeName: product.storeName,
-              thumbnailUrl: product.thumbnailUrl,
-            }}
-          />
+          <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+            <p className="text-4xl font-bold tracking-tight text-foreground">
+              {formatPrice(product.price, product.currency)}
+            </p>
+            <AddToCartButton product={cartProduct} />
+            <p className="mt-4 text-center text-sm text-muted-foreground">
+              Paiement sécurisé. Le prix est confirmé avant le paiement.
+            </p>
+            <PaymentMethodsSoon />
+          </section>
 
           {/* Réassurance */}
           <ul className="grid gap-3 text-sm text-muted-foreground">
@@ -144,7 +157,7 @@ export default async function ProductPage({ params }: PageProps) {
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
             À propos de ce produit
           </h2>
-          <div className="mt-4 max-w-3xl text-[17px] leading-8 whitespace-pre-line text-foreground">
+          <div className="mt-4 max-w-4xl text-justify text-[17px] leading-8 whitespace-pre-line text-foreground">
             {product.description}
           </div>
         </section>
@@ -163,6 +176,7 @@ export default async function ProductPage({ params }: PageProps) {
           </div>
         </section>
       )}
+      <AddToCartButton product={cartProduct} sticky />
     </main>
   );
 }

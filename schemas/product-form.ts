@@ -5,7 +5,7 @@ export const MAX_COVER_SIZE = 5 * 1024 * 1024;
 export const ALLOWED_COVER_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 
 export const productFormSchema = z.object({
-  productType: z.enum(["SERVICE", "PHYSICAL", "DIGITAL"], { message: "Type de produit invalide" }),
+  productType: z.literal("DIGITAL", { message: "Seuls les produits numériques sont disponibles." }),
   title: z
     .string()
     .min(3, "Le titre doit comporter au moins 3 caractères")

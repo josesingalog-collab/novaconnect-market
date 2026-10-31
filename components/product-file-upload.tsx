@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ProductFileRow } from "@/services/products/product-files";
+import { MAX_PRODUCT_FILES, type ProductFileRow } from "@/services/products/product-files";
 
 interface ProductFileUploadProps {
   productId: string;
@@ -36,7 +36,8 @@ function mimeToLabel(mime: string): string {
   return map[mime] ?? mime;
 }
 
-const isEditable = (status: string) => status === "DRAFT" || status === "REJECTED";
+const isEditable = (status: string) =>
+  status === "DRAFT" || status === "REJECTED" || status === "PUBLISHED";
 
 export function ProductFileUpload({
   productId,
@@ -49,6 +50,7 @@ export function ProductFileUpload({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editable = isEditable(productStatus);
 
@@ -96,6 +98,19 @@ export function ProductFileUpload({
       .finally(() => setUploading(false));
   }, [selectedFile, productId, editable, router]);
 
+  const handleDelete = useCallback(
+    async (fileId: string) => {
+      setDeletingId(fileId);
+      setError(null);
+      const response = await fetch(`/api/products/${productId}/files/${fileId}`, { method: "DELETE" });
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) setError(data.error ?? "Impossible de supprimer le fichier.");
+      else router.refresh();
+      setDeletingId(null);
+    },
+    [productId, router],
+  );
+
   return (
     <section className="flex flex-col gap-3">
       {error && <Alert variant="error">{error}</Alert>}
@@ -109,12 +124,6 @@ export function ProductFileUpload({
         </Alert>
       )}
 
-      {!editable && productStatus === "PUBLISHED" && (
-        <Alert variant="info">
-          Votre produit est publié. Le fichier numérique ne peut pas être modifié.
-        </Alert>
-      )}
-
       {!editable && productStatus === "ARCHIVED" && (
         <Alert variant="info">
           Votre produit est archivé. Le fichier numérique ne peut pas être modifié.
@@ -123,7 +132,9 @@ export function ProductFileUpload({
 
       {existingFiles.length > 0 && (
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-foreground">Fichiers existants</p>
+          <p className="text-sm font-medium text-foreground">
+            Fichiers à télécharger ({existingFiles.length}/{MAX_PRODUCT_FILES})
+          </p>
           {existingFiles.map((file) => (
             <div
               key={file.id}
@@ -132,16 +143,30 @@ export function ProductFileUpload({
               <div className="flex flex-col gap-0.5">
                 <span className="text-sm font-medium text-foreground">{file.file_name}</span>
                 <span className="text-xs text-muted-foreground">
-                  {formatFileSize(Number(file.file_size_bytes))} · {mimeToLabel(file.mime_type)} ·
-                  Version {file.version}
+                  {formatFileSize(Number(file.file_size_bytes))} · {mimeToLabel(file.mime_type)}
                 </span>
               </div>
+              {editable && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={deletingId === file.id}
+                  onClick={() => void handleDelete(file.id)}
+                >
+                  {deletingId === file.id ? "Suppression…" : "Supprimer"}
+                </Button>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {existingFiles.length === 0 && !selectedFile && !uploading && (
+      {editable && existingFiles.length >= MAX_PRODUCT_FILES && (
+        <Alert variant="info">Limite atteinte : un produit peut contenir jusqu&apos;à {MAX_PRODUCT_FILES} fichiers.</Alert>
+      )}
+
+      {!selectedFile && !uploading && existingFiles.length < MAX_PRODUCT_FILES && (
         <div
           className={[
             "flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center transition-colors",
@@ -207,7 +232,7 @@ export function ProductFileUpload({
         </div>
       )}
 
-      {editable && selectedFile && !uploading && (
+      {editable && selectedFile && !uploading && existingFiles.length < MAX_PRODUCT_FILES && (
         <Button onClick={handleUpload} className="w-full" size="lg">
           Envoyer le fichier
         </Button>

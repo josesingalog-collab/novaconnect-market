@@ -164,7 +164,7 @@ export async function createProduct(
       thumbnail_url: input.thumbnailUrl || null,
       thumbnail_path: input.thumbnailPath || null,
       status: "DRAFT",
-      product_type: input.productType ?? "PHYSICAL",
+      product_type: "DIGITAL",
     })
     .select("id")
     .single();
@@ -217,9 +217,7 @@ export async function updateProduct(
     currency: input.currency,
     category_id: input.categoryId,
   };
-  if (input.productType !== undefined) {
-    updateData.product_type = input.productType;
-  }
+  updateData.product_type = "DIGITAL";
   if (
     input.thumbnailUrl !== undefined &&
     input.thumbnailUrl !== null &&
@@ -317,7 +315,7 @@ export async function listMyProducts(db: ManageDb, vendorId: string): Promise<Se
       hasFile: (fileCounts[row.id] ?? 0) > 0,
       createdAt: row.created_at,
       rejectionReason: row.rejection_reason,
-      productType: row.product_type ?? "PHYSICAL",
+      productType: row.product_type ?? "DIGITAL",
     }),
   );
 }
@@ -389,11 +387,11 @@ export async function getMyProduct(
     hasFile: latestFile !== null,
     createdAt: row.created_at,
     rejectionReason: row.rejection_reason,
-    productType: row.product_type ?? "PHYSICAL",
+    productType: row.product_type ?? "DIGITAL",
   };
 }
 
-/** Met à jour le statut d'un produit (vendeur → PENDING_REVIEW depuis DRAFT ou REJECTED). */
+/** Publie directement un produit complet appartenant au vendeur. */
 export async function updateProductStatus(
   db: ManageDb,
   productId: string,
@@ -421,16 +419,15 @@ export async function updateProductStatus(
     return { ok: false, error: "Ce produit est archivé." };
   }
 
-  if (product.status === "PENDING_REVIEW") {
-    return { ok: true, productId: product.id };
-  }
-
   if (product.status !== "DRAFT" && product.status !== "REJECTED") {
-    return { ok: false, error: "Ce produit ne peut pas être soumis depuis son statut actuel." };
+    return { ok: false, error: "Ce produit ne peut pas être publié depuis son statut actuel." };
   }
 
   const missing: string[] = [];
   const productType = (product as { product_type: string }).product_type;
+  if (productType !== "DIGITAL") {
+    return { ok: false, error: "Seuls les produits numériques peuvent être publiés actuellement." };
+  }
   if (!product.thumbnail_path && (productType === "DIGITAL" || productType === "PHYSICAL")) {
     missing.push("une image de couverture");
   }
@@ -449,7 +446,7 @@ export async function updateProductStatus(
 
   const { data, error } = await db
     .from("products")
-    .update({ status: "PENDING_REVIEW" })
+    .update({ status: "PUBLISHED" })
     .eq("id", productId)
     .eq("vendor_id", vendorId)
     .select("id")

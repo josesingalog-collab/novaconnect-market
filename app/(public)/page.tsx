@@ -1,108 +1,237 @@
 import Link from "next/link";
-import { CategoryPills } from "@/components/marketplace/category-pills";
 import { ProductCard } from "@/components/marketplace/product-card";
-import { VendorCard } from "@/components/marketplace/vendor-card";
-import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { listPublicCategories, listPublicProducts } from "@/services/products/public";
-import { listActiveVendors } from "@/services/vendors/public";
+import { listPublicProducts, type PublicProductPage } from "@/services/products/public";
 
 export const metadata = {
-  title: "NovaConnect Market — La marketplace des produits numériques",
+  title: "NovaConnect Market | Votre vitrine numérique",
   description:
-    "Créez, vendez et découvrez des produits numériques utiles, pensés pour apprendre, travailler et développer vos projets.",
+    "Créez votre boutique, publiez vos ressources numériques et découvrez les créations de la communauté NovaConnect.",
   robots: { index: true, follow: true },
 };
 
+const steps = [
+  ["01", "Créez votre vitrine", "Choisissez le nom de votre boutique et donnez-lui une identité."],
+  [
+    "02",
+    "Ajoutez vos ressources",
+    "Préparez vos produits numériques, leurs visuels et leurs fichiers.",
+  ],
+  [
+    "03",
+    "Partagez votre lien",
+    "Faites découvrir votre travail depuis une page qui vous ressemble.",
+  ],
+] as const;
+
+const faqs = [
+  [
+    "Ma boutique est-elle visible dès sa création ?",
+    "Oui. Après sa création, votre boutique dispose de sa propre page publique que vous pouvez commencer à partager.",
+  ],
+  [
+    "Combien de fichiers puis-je ajouter à un produit ?",
+    "Vous pouvez associer jusqu'à trois fichiers à un même produit numérique.",
+  ],
+  [
+    "Puis-je modifier un produit publié ?",
+    "Vous pouvez mettre à jour les informations et les fichiers de votre produit avant sa première vente.",
+  ],
+  [
+    "À qui s'adresse NovaConnect ?",
+    "Aux créateurs qui souhaitent organiser et présenter des guides, templates, formations et autres ressources numériques.",
+  ],
+] as const;
+
 export default async function HomePage() {
-  const db = await createSupabaseServerClient();
+  let featuredProducts: PublicProductPage | null = null;
 
-  const [categories, latest, vendors] = await Promise.all([
-    listPublicCategories(db),
-    listPublicProducts(db),
-    listActiveVendors(db, 4),
-  ]);
-
-  const featuredProducts = latest.products.slice(0, 8);
+  try {
+    const db = await createSupabaseServerClient();
+    featuredProducts = await listPublicProducts(db, { sort: "recent" });
+  } catch {
+    // Les produits mis en avant sont optionnels : la landing doit rester disponible
+    // même lorsqu'une requête vers le catalogue ne peut pas aboutir.
+  }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-      {/* HERO */}
-      <section className="flex flex-col items-center gap-6 py-20 text-center sm:py-28 lg:py-32">
-        <Badge variant="outline" className="text-xs font-medium">
-          La marketplace des produits digitaux
-        </Badge>
-        <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-          Transformez vos connaissances en revenus.
-        </h1>
-        <p className="max-w-xl text-lg leading-8 text-muted-foreground">
-          Créez, vendez et découvrez des produits numériques utiles, pensés pour apprendre,
-          travailler et développer vos projets.
-        </p>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Link href="/catalogue">
-            <Button size="lg" className="min-h-[48px] px-8">
-              Découvrir les produits
+    <main className="flex-1 overflow-hidden bg-[#f8fbff]">
+      <section className="relative isolate border-b border-primary/10 bg-[linear-gradient(to_right,rgba(37,99,235,0.055)_1px,transparent_1px),linear-gradient(to_bottom,rgba(37,99,235,0.055)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] px-4 pt-16 sm:px-6 sm:pt-24 lg:px-8 lg:pt-28">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white/30 via-[#f8fbff]/75 to-[#f8fbff]" />
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white/85 px-3 py-1.5 text-xs font-semibold tracking-[0.13em] text-primary uppercase shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-sky" />
+            L&apos;espace des créateurs numériques
+          </p>
+          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-bold tracking-[-0.06em] text-foreground sm:text-6xl lg:text-7xl lg:leading-[1.03]">
+            Donnez une place à vos idées.{" "}
+            <span className="text-primary">Partagez ce que vous créez.</span>
+          </h1>
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
+            La plateforme pour créer votre boutique, organiser vos ressources numériques et les
+            présenter dans un espace à votre image.
+          </p>
+          <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+            <Button asChild size="lg" className="min-h-12 px-7 shadow-lg shadow-primary/20">
+              <Link href="/dashboard/devenir-vendeur">Créer ma boutique</Link>
             </Button>
-          </Link>
-          <Link href="/dashboard/devenir-vendeur">
-            <Button variant="outline" size="lg" className="min-h-[48px] px-8">
-              Vendre sur NovaConnect
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="min-h-12 border-primary/20 bg-white/85 px-7 text-primary hover:bg-primary/5"
+            >
+              <Link href="#avantages">Découvrir NovaConnect</Link>
             </Button>
-          </Link>
+          </div>
+          <p className="mt-5 text-sm text-muted-foreground">
+            Votre vitrine, vos ressources, votre rythme.
+          </p>
+        </div>
+
+        <div className="mx-auto mt-14 w-full max-w-5xl overflow-hidden rounded-t-[1.75rem] border border-border bg-white shadow-[0_-8px_50px_rgba(37,99,235,0.13)] sm:mt-16">
+          <div className="flex items-center justify-between border-b border-border bg-muted/65 px-3 py-2.5 sm:px-5">
+            <div className="flex gap-1.5" aria-hidden="true">
+              <span className="h-2 w-2 rounded-full bg-primary/25" />
+              <span className="h-2 w-2 rounded-full bg-primary/20" />
+              <span className="h-2 w-2 rounded-full bg-primary/15" />
+            </div>
+            <div className="rounded-md border border-border bg-white px-3 py-1 text-[10px] font-medium text-muted-foreground">
+              novaconnect.market/espace-vendeur
+            </div>
+            <span className="w-8" aria-hidden="true" />
+          </div>
+          <div className="grid min-h-70 grid-cols-[3.8rem_1fr] sm:min-h-88 sm:grid-cols-[10.5rem_1fr]">
+            <aside className="bg-[#102b61] px-2 py-4 text-white sm:px-4 sm:py-5">
+              <div className="flex items-center gap-2 border-b border-white/10 pb-4">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky text-[9px] font-bold text-primary">
+                  NC
+                </span>
+                <span className="hidden text-sm font-bold sm:inline">NovaConnect</span>
+              </div>
+              <div className="mt-5 space-y-2 text-[10px] sm:text-xs">
+                {["Vue d'ensemble", "Mes produits", "Ma boutique", "Commandes"].map(
+                  (item, index) => (
+                    <div
+                      key={item}
+                      className={`rounded-lg px-2 py-2 ${index === 0 ? "bg-white/13 text-white" : "text-white/55"}`}
+                    >
+                      <span className="hidden sm:inline">{item}</span>
+                      <span className="sm:hidden">{index + 1}</span>
+                    </div>
+                  ),
+                )}
+              </div>
+            </aside>
+            <div className="min-w-0 p-4 sm:p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-semibold tracking-[0.12em] text-primary uppercase">
+                    Espace vendeur
+                  </p>
+                  <h2 className="mt-1 text-base font-bold text-foreground sm:text-xl">
+                    Bonjour, créateur.
+                  </h2>
+                </div>
+                <span className="rounded-lg bg-primary px-2.5 py-1.5 text-[10px] font-semibold text-white sm:px-3">
+                  Nouveau produit
+                </span>
+              </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                {[
+                  ["Votre boutique", "Prête à partager"],
+                  ["Produits", "Organisez vos ressources"],
+                  ["Fichiers", "Jusqu'à 3 par produit"],
+                ].map(([title, text]) => (
+                  <div key={title} className="rounded-xl border border-border bg-[#f8fbff] p-3">
+                    <p className="text-[11px] font-bold text-foreground">{title}</p>
+                    <p className="mt-1 text-[10px] leading-4 text-muted-foreground">{text}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 rounded-xl border border-border p-3 sm:p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold text-foreground">Vos ressources</p>
+                  <span className="text-[10px] font-medium text-primary">Voir le catalogue</span>
+                </div>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {["Guide", "Template", "Formation"].map((item, index) => (
+                    <div
+                      key={item}
+                      className="overflow-hidden rounded-lg border border-border bg-white"
+                    >
+                      <div
+                        className={`h-7 sm:h-10 ${index === 0 ? "bg-sky/30" : index === 1 ? "bg-primary/15" : "bg-blue-100"}`}
+                      />
+                      <p className="truncate px-1.5 py-1 text-[9px] font-medium text-foreground">
+                        {item}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* CATÉGORIES */}
-      {categories.length > 0 && (
-        <section id="categories" className="scroll-mt-20 py-10">
-          <div className="flex flex-col items-center gap-2 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Découvrez ce qui peut vous aider
-            </h2>
-            <p className="max-w-lg text-base text-muted-foreground">
-              Explorez des ressources numériques créées pour apprendre, travailler et développer vos
-              projets.
-            </p>
-          </div>
-          <div className="mt-8">
-            <CategoryPills categories={categories} />
-          </div>
-        </section>
-      )}
-
-      {/* PRODUITS */}
-      <section id="produits" className="scroll-mt-20 py-10">
-        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <div>
-            <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Découvrez nos produits
-            </h2>
-            <p className="mt-2 text-base text-muted-foreground">Les produits les plus récents.</p>
-          </div>
-          {featuredProducts.length > 0 && (
-            <Link
-              href="/catalogue"
-              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Voir tout →
-            </Link>
-          )}
+      <section className="border-b border-border bg-white px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto grid w-full max-w-6xl divide-y divide-border md:grid-cols-4 md:divide-x md:divide-y-0">
+          {[
+            ["Boutique personnelle", "Votre page publique"],
+            ["Produits numériques", "Guides, templates et plus"],
+            ["Jusqu'à 3 fichiers", "Pour chaque produit"],
+            ["Espace vendeur", "Produits et commandes"],
+          ].map(([title, description]) => (
+            <div key={title} className="px-2 py-5 text-center sm:px-5 md:py-6">
+              <p className="text-sm font-bold text-foreground">{title}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+            </div>
+          ))}
         </div>
-        {featuredProducts.length > 0 ? (
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            icon={
+      </section>
+
+      <section
+        id="avantages"
+        className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8"
+      >
+        <div className="max-w-2xl">
+          <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
+            Pensé pour mettre votre travail en valeur
+          </p>
+          <h2 className="mt-4 text-3xl font-bold tracking-[-0.045em] text-foreground sm:text-4xl">
+            Plus qu&apos;un lien : un espace qui porte votre signature.
+          </h2>
+        </div>
+        <div className="mt-12 grid gap-5 lg:grid-cols-12">
+          <article className="relative overflow-hidden rounded-3xl bg-[#102b61] p-7 text-white sm:p-9 lg:col-span-7">
+            <div className="absolute -top-16 -right-12 h-48 w-48 rounded-full bg-sky/25 blur-2xl" />
+            <p className="relative text-xs font-semibold tracking-[0.15em] text-sky uppercase">
+              Une vitrine qui vous ressemble
+            </p>
+            <h3 className="relative mt-4 max-w-md text-2xl font-bold tracking-tight sm:text-3xl">
+              Présentez votre savoir-faire avec simplicité.
+            </h3>
+            <p className="relative mt-4 max-w-lg text-sm leading-7 text-white/70 sm:text-base">
+              Votre nom, votre description et vos créations sont réunis dans une boutique publique
+              facile à parcourir.
+            </p>
+            <div className="relative mt-9 flex max-w-sm items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-3 backdrop-blur-sm">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 text-sm font-bold">
+                AN
+              </span>
+              <div>
+                <p className="text-sm font-semibold">Atelier Nova</p>
+                <p className="text-xs text-white/55">Créations numériques</p>
+              </div>
+            </div>
+          </article>
+
+          <article className="rounded-3xl border border-border bg-white p-7 sm:p-9 lg:col-span-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky/20 text-primary">
               <svg
-                className="h-8 w-8 text-muted-foreground"
+                className="h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -111,268 +240,183 @@ export default async function HomePage() {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                  strokeWidth={1.8}
+                  d="M12 4.75v14.5m7.25-7.25H4.75"
                 />
               </svg>
-            }
-            title="Les premiers produits arrivent bientôt"
-            description="Découvrez bientôt une sélection de ressources numériques créées par notre communauté."
-            action={{ label: "Voir le catalogue", href: "/catalogue" }}
-          />
-        )}
+            </div>
+            <h3 className="mt-8 text-xl font-bold tracking-tight text-foreground">
+              Vos ressources, bien organisées.
+            </h3>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">
+              Ajoutez une couverture, une description et les fichiers associés afin que chaque
+              produit soit clair dès le premier regard.
+            </p>
+            <div className="mt-7 space-y-2">
+              {["Couverture de produit", "Description détaillée", "Fichiers associés"].map(
+                (item) => (
+                  <p
+                    key={item}
+                    className="flex items-center gap-2 text-sm font-medium text-foreground"
+                  >
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-success/10 text-success">
+                      ✓
+                    </span>
+                    {item}
+                  </p>
+                ),
+              )}
+            </div>
+          </article>
+
+          <article className="rounded-3xl border border-border bg-[#edf6ff] p-7 sm:p-9 lg:col-span-5">
+            <p className="text-xs font-semibold tracking-[0.15em] text-primary uppercase">
+              Un parcours direct
+            </p>
+            <h3 className="mt-4 text-xl font-bold tracking-tight text-foreground">
+              Moins de configuration, plus de création.
+            </h3>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">
+              Passez de votre idée à une page publique sans construire votre propre site.
+            </p>
+          </article>
+
+          <article className="rounded-3xl border border-border bg-white p-7 sm:p-9 lg:col-span-7">
+            <div className="flex flex-col justify-between gap-7 sm:flex-row sm:items-end">
+              <div className="max-w-md">
+                <p className="text-xs font-semibold tracking-[0.15em] text-primary uppercase">
+                  Un espace à suivre
+                </p>
+                <h3 className="mt-4 text-xl font-bold tracking-tight text-foreground">
+                  Gardez la main sur votre catalogue.
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  Depuis votre espace vendeur, retrouvez vos produits, vos commandes et
+                  l&apos;évolution de votre boutique.
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-2 rounded-2xl bg-muted p-3 text-center sm:min-w-52">
+                {[
+                  ["Produits", "01"],
+                  ["Fichiers", "03"],
+                  ["Boutique", "✓"],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-xl bg-white px-2 py-3 shadow-sm">
+                    <p className="text-lg font-bold text-primary">{value}</p>
+                    <p className="mt-1 text-[10px] font-medium text-muted-foreground">{label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </article>
+        </div>
       </section>
 
-      {/* BOUTIQUES */}
-      {vendors.length > 0 && (
-        <section id="boutiques" className="scroll-mt-20 py-10">
-          <div className="flex flex-col items-center gap-2 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Boutiques à la une
-            </h2>
-            <p className="max-w-lg text-base text-muted-foreground">
-              Découvrez les vendeurs les plus actifs sur NovaConnect Market.
+      <section className="border-y border-border bg-white px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
+              Votre point de départ
             </p>
+            <h2 className="mt-4 text-3xl font-bold tracking-[-0.045em] text-foreground sm:text-4xl">
+              Une boutique en trois mouvements.
+            </h2>
           </div>
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {vendors.map((vendor) => (
-              <VendorCard key={vendor.id} vendor={vendor} />
+          <div className="relative mt-14 grid gap-8 md:grid-cols-3 md:gap-10">
+            <div className="absolute top-7 right-[17%] left-[17%] hidden h-px bg-border md:block" />
+            {steps.map(([number, title, description]) => (
+              <article key={number} className="relative text-center">
+                <span className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/15 bg-[#f8fbff] text-sm font-bold text-primary shadow-sm">
+                  {number}
+                </span>
+                <h3 className="mt-6 text-lg font-bold text-foreground">{title}</h3>
+                <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-muted-foreground">
+                  {description}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {featuredProducts !== null && featuredProducts.products.length > 0 && (
+        <section className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+          <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+            <div className="max-w-xl">
+              <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
+                Dans le catalogue
+              </p>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.045em] text-foreground sm:text-4xl">
+                Les dernières ressources publiées.
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-muted-foreground">
+                Explorez ce que les créateurs de la communauté ont choisi de partager.
+              </p>
+            </div>
+            <Button
+              asChild
+              variant="outline"
+              className="border-primary/20 bg-white text-primary hover:bg-primary/5"
+            >
+              <Link href="/catalogue">Voir le catalogue</Link>
+            </Button>
+          </div>
+          <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {featuredProducts.products.slice(0, 4).map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         </section>
       )}
 
-      {/* VALEUR */}
-      <section className="scroll-mt-20 py-16">
-        <div className="text-center">
-          <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Tout ce qu&apos;il faut pour passer de l&apos;idée à l&apos;action.
-          </h2>
-        </div>
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-              </div>
-              <CardTitle className="mt-4">Apprenez</CardTitle>
-              <CardDescription className="mt-1">
-                Découvrez des ressources utiles pour développer vos compétences.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue/10 text-blue">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"
-                  />
-                </svg>
-              </div>
-              <CardTitle className="mt-4">Créez</CardTitle>
-              <CardDescription className="mt-1">
-                Transformez vos connaissances et vos ressources en produits numériques.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-accent">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                  />
-                </svg>
-              </div>
-              <CardTitle className="mt-4">Vendez</CardTitle>
-              <CardDescription className="mt-1">
-                Présentez vos créations à des personnes qui recherchent des ressources utiles.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-          <Card>
-            <CardHeader>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky/10 text-sky">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-              </div>
-              <CardTitle className="mt-4">Développez-vous</CardTitle>
-              <CardDescription className="mt-1">
-                Suivez votre activité depuis votre espace NovaConnect.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-      </section>
-
-      {/* COMMENT ÇA MARCHE */}
-      <section className="scroll-mt-20 py-16">
-        <div className="text-center">
-          <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Comment fonctionne NovaConnect ?
-          </h2>
-        </div>
-        <div className="mt-12 grid gap-8 sm:grid-cols-2">
-          <div className="rounded-xl border border-border bg-card p-6">
-            <h3 className="text-xl font-semibold tracking-tight text-foreground">
-              <Badge variant="default" className="mb-2">
-                Acheteur
-              </Badge>
-            </h3>
-            <ul className="mt-4 flex flex-col gap-4">
-              <li className="flex items-start gap-3">
-                <span
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
-                  aria-hidden="true"
-                >
-                  1
-                </span>
-                <div>
-                  <p className="font-medium text-foreground">Trouvez</p>
-                  <p className="text-sm text-muted-foreground">
-                    Découvrez le produit dont vous avez besoin.
-                  </p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
-                  aria-hidden="true"
-                >
-                  2
-                </span>
-                <div>
-                  <p className="font-medium text-foreground">Achetez</p>
-                  <p className="text-sm text-muted-foreground">Passez votre commande simplement.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
-                  aria-hidden="true"
-                >
-                  3
-                </span>
-                <div>
-                  <p className="font-medium text-foreground">Téléchargez</p>
-                  <p className="text-sm text-muted-foreground">
-                    Retrouvez votre produit après votre achat.
-                  </p>
-                </div>
-              </li>
-            </ul>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-6">
-            <h3 className="text-xl font-semibold tracking-tight text-foreground">
-              <Badge variant="outline" className="mb-2 border-accent text-accent">
-                Vendeur
-              </Badge>
-            </h3>
-            <ul className="mt-4 flex flex-col gap-4">
-              <li className="flex items-start gap-3">
-                <span
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground"
-                  aria-hidden="true"
-                >
-                  1
-                </span>
-                <div>
-                  <p className="font-medium text-foreground">Créez</p>
-                  <p className="text-sm text-muted-foreground">Ajoutez votre produit.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground"
-                  aria-hidden="true"
-                >
-                  2
-                </span>
-                <div>
-                  <p className="font-medium text-foreground">Faites vérifier</p>
-                  <p className="text-sm text-muted-foreground">
-                    Soumettez-le à notre processus de vérification.
-                  </p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground"
-                  aria-hidden="true"
-                >
-                  3
-                </span>
-                <div>
-                  <p className="font-medium text-foreground">Vendez</p>
-                  <p className="text-sm text-muted-foreground">
-                    Une fois approuvé, votre produit peut être découvert par les acheteurs.
-                  </p>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA VENDEUR */}
-      <section id="devenir-vendeur" className="scroll-mt-20 py-16">
-        <div className="rounded-2xl bg-primary px-6 py-12 text-center sm:px-12 lg:px-16">
-          <h2 className="text-3xl font-semibold tracking-tight text-primary-foreground sm:text-4xl">
-            Vous avez quelque chose à transmettre ?
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-primary-foreground/80">
-            Transformez votre expertise, vos formations ou vos ressources en produits numériques.
+      <section className="mx-auto w-full max-w-6xl px-4 pb-20 sm:px-6 sm:pb-28 lg:px-8">
+        <div className="overflow-hidden rounded-[2rem] bg-[#102b61] px-6 py-12 text-center text-white sm:px-12 sm:py-16">
+          <p className="text-xs font-semibold tracking-[0.16em] text-sky uppercase">
+            Votre prochaine étape
           </p>
-          <Link href="/dashboard/devenir-vendeur" className="mt-8 inline-block">
-            <Button size="lg" variant="accent" className="min-h-[48px] px-8">
-              Commencer à vendre
-            </Button>
-          </Link>
+          <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-bold tracking-[-0.045em] sm:text-4xl">
+            Lancez votre vitrine numérique avec NovaConnect.
+          </h2>
+          <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-white/70 sm:text-base">
+            Donnez à vos ressources un espace clair, personnel et prêt à être découvert.
+          </p>
+          <Button
+            asChild
+            size="lg"
+            className="mt-8 min-h-12 bg-white px-7 text-primary hover:bg-sky/20"
+          >
+            <Link href="/dashboard/devenir-vendeur">Créer ma boutique</Link>
+          </Button>
         </div>
+
+        <section aria-labelledby="faq-title" className="mx-auto mt-20 max-w-3xl sm:mt-28">
+          <div className="text-center">
+            <p className="text-xs font-semibold tracking-[0.16em] text-primary uppercase">
+              Questions fréquentes
+            </p>
+            <h2
+              id="faq-title"
+              className="mt-4 text-3xl font-bold tracking-[-0.045em] text-foreground"
+            >
+              Tout commence simplement.
+            </h2>
+          </div>
+          <div className="mt-10 divide-y divide-border border-y border-border">
+            {faqs.map(([question, answer]) => (
+              <details key={question} className="group py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-5 text-left text-sm font-bold text-foreground [&::-webkit-details-marker]:hidden">
+                  {question}
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-primary transition-transform group-open:rotate-45">
+                    +
+                  </span>
+                </summary>
+                <p className="max-w-2xl pt-3 pr-10 text-sm leading-7 text-muted-foreground">
+                  {answer}
+                </p>
+              </details>
+            ))}
+          </div>
+        </section>
       </section>
     </main>
   );

@@ -311,7 +311,6 @@ export default async function PreviewProductPage({ params }: { params: Promise<{
           {canSubmit && (
             <SubmitProductForm
               productId={id}
-              productStatus={product.status}
               productTitle={product.title}
             />
           )}

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requiresMfaChallenge } from "@/lib/supabase/mfa";
 import { uploadProductFile } from "@/services/products/product-files";
 import { type ProductFormState, initialProductFormState } from "@/lib/product-form-state";
 
@@ -33,6 +35,13 @@ export async function uploadProductFileAction(
   }
 
   const supabase = await createSupabaseServerClient();
+  if (await requiresMfaChallenge(supabase)) {
+    return {
+      ...initialProductFormState,
+      status: "error",
+      error: "Vérification en deux étapes requise.",
+    };
+  }
 
   const { data: vendor } = await supabase
     .from("vendors")
@@ -54,7 +63,12 @@ export async function uploadProductFileAction(
     return { ...initialProductFormState, status: "error", error: "Fichier requis." };
   }
 
-  const result = await uploadProductFile(supabase, current.profile.id, productId, file);
+  const result = await uploadProductFile(
+    createSupabaseAdminClient(),
+    current.profile.id,
+    productId,
+    file,
+  );
 
   if (!result.ok) {
     return { ...initialProductFormState, status: "error", error: result.error };

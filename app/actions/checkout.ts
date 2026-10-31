@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/profile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { canSimulatePayments } from "@/lib/env";
 import { createCheckoutOrder } from "@/services/orders/checkout";
 import { getOwnOrderStatus, type OrderStatusRow } from "@/services/orders/payment-status";
 import { checkoutSchema } from "@/schemas/checkout";
@@ -22,6 +23,14 @@ export async function placeOrderAction(
   _prevState: CheckoutFormState,
   formData: FormData,
 ): Promise<CheckoutFormState> {
+  if (!canSimulatePayments()) {
+    return {
+      status: "error",
+      error: "Les paiements ne sont pas encore disponibles.",
+      order: null,
+    };
+  }
+
   const current = await getCurrentProfile();
 
   if (current.kind === "unauthenticated") {
@@ -95,6 +104,10 @@ export type MockPaymentResult =
   | { readonly ok: false; readonly error: string };
 
 export async function mockConfirmPaymentAction(orderId: string): Promise<MockPaymentResult> {
+  if (!canSimulatePayments()) {
+    return { ok: false, error: "Le paiement simulé est désactivé en production." };
+  }
+
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId)) {
     return { ok: false, error: "Commande invalide." };
   }

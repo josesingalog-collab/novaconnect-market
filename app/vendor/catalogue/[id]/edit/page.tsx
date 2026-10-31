@@ -17,7 +17,6 @@ import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
-import React from "react";
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT: "Brouillon",
@@ -37,68 +36,6 @@ const STATUS_VARIANTS: Record<
   REJECTED: "destructive",
   ARCHIVED: "outline",
 };
-
-function ProgressIndicator({ product }: { product: SellerProduct }) {
-  const infosOk = checkProductCompletion(product);
-  const hasCover = !!product.thumbnailPath;
-  const hasFile = product.hasFile;
-  const steps = [
-    { label: "Informations", ok: infosOk },
-    ...(product.productType === "PHYSICAL" || product.productType === "DIGITAL"
-      ? [{ label: "Couverture", ok: hasCover }]
-      : []),
-    ...(product.productType === "DIGITAL" ? [{ label: "Fichier", ok: hasFile }] : []),
-    { label: "Vérification", ok: false },
-    { label: "Publication", ok: false },
-  ];
-
-  return (
-    <Card variant="bordered">
-      <CardContent className="flex flex-col gap-3 p-4 sm:p-6">
-        <h2 className="text-lg font-semibold tracking-tight text-foreground">Progression</h2>
-        <div
-          className="flex items-center gap-1 overflow-x-auto"
-          aria-label="Progression du produit"
-        >
-          {steps.map((step, index) => {
-            const isCompleted = step.ok;
-            const completedCount = steps.filter((s) => s.ok).length;
-            const isCurrent = index < completedCount && !isCompleted;
-            return (
-              <React.Fragment key={step.label}>
-                <div className="flex flex-col items-center gap-1">
-                  <span
-                    className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${
-                      isCompleted
-                        ? "bg-primary text-primary-foreground"
-                        : isCurrent
-                          ? "bg-primary/20 text-primary"
-                          : "bg-muted text-muted-foreground"
-                    }`}
-                    aria-hidden="true"
-                  >
-                    {isCompleted ? "✓" : index + 1}
-                  </span>
-                  <span
-                    className={`hidden text-xs sm:inline ${isCompleted || isCurrent ? "font-medium text-foreground" : "text-muted-foreground"}`}
-                  >
-                    {step.label}
-                  </span>
-                </div>
-                {index < steps.length - 1 && (
-                  <div
-                    className={`h-px w-8 sm:w-12 ${isCompleted ? "bg-primary" : "bg-border"}`}
-                    aria-hidden="true"
-                  />
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function CompletionSummary({ product }: { product: SellerProduct }) {
   const checks = [
@@ -234,8 +171,8 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const existingFiles = await listProductFiles(supabase, id);
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-1 flex-col gap-6 px-4 py-6 lg:px-6 lg:py-8">
-      <div className="flex flex-col gap-2">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-8 lg:px-8 lg:py-10">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
         <div className="flex items-center gap-3">
           <Link href="/vendor/catalogue" className="text-sm text-primary hover:underline">
             ← Retour au catalogue
@@ -264,49 +201,69 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      <ProductStatusBanner product={product} />
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+        <ProductStatusBanner product={product} />
 
-      <ProgressIndicator product={product} />
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-7">
+          <ProductForm
+            initialProduct={{
+              id: product.id,
+              slug: product.slug,
+              title: product.title,
+              shortDescription: product.shortDescription ?? "",
+              description: product.description ?? "",
+              price: product.price,
+              currency: product.currency,
+              categoryId: product.categoryId ?? "",
+              thumbnailUrl: product.thumbnailUrl ?? "",
+              thumbnailPath: product.thumbnailPath,
+              productType: product.productType,
+            }}
+            categories={categories}
+          />
+        </section>
 
-      <ProductForm
-        initialProduct={{
-          id: product.id,
-          slug: product.slug,
-          title: product.title,
-          shortDescription: product.shortDescription ?? "",
-          description: product.description ?? "",
-          price: product.price,
-          currency: product.currency,
-          categoryId: product.categoryId ?? "",
-          thumbnailUrl: product.thumbnailUrl ?? "",
-          thumbnailPath: product.thumbnailPath,
-          productType: product.productType,
-        }}
-        categories={categories}
-      />
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-7">
+          <h2 className="text-lg font-semibold text-foreground">Médias du produit</h2>
+          <div className="mt-5 flex flex-col gap-6">
+            <div className="border-b border-border pb-6">
+              <h3 className="text-base font-semibold text-foreground">Photo de couverture</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Cette image est affichée dans le catalogue et sur la page du produit.
+              </p>
+              <div className="mt-4">
+                <CoverImageUpload
+                  productId={product.id}
+                  currentThumbnailPath={product.thumbnailPath}
+                  currentThumbnailUrl={product.thumbnailUrl}
+                  productStatus={product.status}
+                />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-foreground">Fichier à télécharger</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                C&apos;est le fichier que l&apos;acheteur recevra après le paiement.
+              </p>
+              <div className="mt-4">
+                <ProductFileUpload
+                  productId={product.id}
+                  productStatus={product.status}
+                  existingFiles={existingFiles}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <CoverImageUpload
-        productId={product.id}
-        currentThumbnailPath={product.thumbnailPath}
-        currentThumbnailUrl={product.thumbnailUrl}
-        productStatus={product.status}
-      />
+        <CompletionSummary product={product} />
 
-      <ProductFileUpload
-        productId={product.id}
-        productStatus={product.status}
-        existingFiles={existingFiles}
-      />
-
-      <CompletionSummary product={product} />
-
-      {(product.status === "DRAFT" || product.status === "REJECTED") && (
-        <SubmitProductForm
-          productId={id}
-          productStatus={product.status}
-          productTitle={product.title}
-        />
-      )}
+        {product.status === "DRAFT" && (
+          <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-7">
+            <SubmitProductForm productId={id} productTitle={product.title} />
+          </section>
+        )}
+      </div>
     </div>
   );
 }

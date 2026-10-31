@@ -14,7 +14,9 @@ export function RegisterForm() {
 
   return (
     <form action={formAction} className="flex w-full max-w-md flex-col gap-5">
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">Créer un compte</h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        Inscrivez-vous à NovaConnect
+      </h1>
 
       <InputField
         label="Nom complet"
@@ -24,7 +26,7 @@ export function RegisterForm() {
         placeholder="Jean Kalala"
         autoComplete="name"
         required
-        description="Tel que sur votre pièce d'identité"
+        description="Utilisé pour personnaliser votre espace"
       />
 
       <InputField
@@ -66,13 +68,13 @@ export function RegisterForm() {
       )}
 
       <Button type="submit" disabled={pending} variant="default" className="mt-1 w-full">
-        {pending ? "Création…" : "Créer mon compte"}
+        {pending ? "Création…" : "S'inscrire"}
       </Button>
 
       <p className="text-center text-sm text-muted-foreground">
-        Déjà inscrit ?{" "}
+        Vous avez déjà un compte ?{" "}
         <Link href="/login" className="font-medium text-primary underline-offset-4 hover:underline">
-          Se connecter
+          Connectez-vous
         </Link>
       </p>
     </form>
