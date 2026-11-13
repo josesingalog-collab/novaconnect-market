@@ -37,7 +37,7 @@ export default async function DashboardPage() {
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">
             N
           </span>
-          NovaConnect
+          SAVPAY
         </Link>
         <form action={logoutAction}>
           <Button type="submit" variant="ghost">
@@ -77,7 +77,7 @@ export default async function DashboardPage() {
                     {vendor.store_name}
                   </span>
                   <span className="mt-1 block truncate text-sm text-muted-foreground">
-                    novaconnect.app/boutique/{vendor.slug}
+                    savpay.app/boutique/{vendor.slug}
                   </span>
                 </span>
                 <span className="text-sm font-semibold text-primary">Gérer →</span>

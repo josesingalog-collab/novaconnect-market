@@ -129,7 +129,7 @@ function ProductStatusBanner({ product }: { product: SellerProduct }) {
     return (
       <Alert variant="info">
         <span className="font-semibold">Publié</span>
-        <p className="mt-1">Votre produit est actuellement visible sur NovaConnect.</p>
+        <p className="mt-1">Votre produit est actuellement visible sur SAVPAY.</p>
       </Alert>
     );
   }

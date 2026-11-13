@@ -14,7 +14,7 @@ import {
 } from "@/services/products/public";
 
 export const metadata: Metadata = {
-  title: "Catalogue — NovaConnect Market",
+  title: "Catalogue — SAVPAY",
   description:
     "Découvrez des formations, ebooks, templates et ressources numériques pour apprendre, travailler et développer vos projets.",
   robots: { index: true, follow: true },
@@ -74,7 +74,7 @@ export default async function CataloguePage({
       {/* HÉROS */}
       <section className="flex flex-col items-center gap-6 py-16 text-center sm:py-24">
         <Badge variant="outline" className="text-xs font-medium">
-          Catalogue — NovaConnect Market
+          Catalogue — SAVPAY
         </Badge>
         <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
           Découvrez des ressources qui vous font avancer.

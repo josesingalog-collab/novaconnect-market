@@ -15,7 +15,7 @@ export function RegisterForm() {
   return (
     <form action={formAction} className="flex w-full max-w-md flex-col gap-5">
       <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-        Inscrivez-vous à NovaConnect
+        Inscrivez-vous à SAVPAY
       </h1>
 
       <InputField

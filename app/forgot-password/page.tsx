@@ -20,7 +20,7 @@ export default async function ForgotPasswordPage({
     <main className="grid min-h-full flex-1 bg-white lg:grid-cols-2">
       <section className="hidden flex-col justify-between bg-primary p-12 text-white lg:flex">
         <Link href="/" className="text-xl font-semibold">
-          NovaConnect
+          SAVPAY
         </Link>
         <div className="max-w-md">
           <p className="text-sm font-semibold tracking-[0.16em] text-white/70 uppercase">
@@ -33,12 +33,12 @@ export default async function ForgotPasswordPage({
             Un lien sécurisé vous permettra de choisir un nouveau mot de passe.
           </p>
         </div>
-        <p className="text-sm text-white/60">NovaConnect, la plateforme des créateurs.</p>
+        <p className="text-sm text-white/60">SAVPAY, la plateforme des créateurs.</p>
       </section>
       <section className="flex items-center justify-center px-5 py-12 sm:px-10">
         <div className="w-full max-w-md">
           <Link href="/" className="text-sm font-semibold text-primary hover:underline">
-            ← NovaConnect
+            ← SAVPAY
           </Link>
           <div className="mt-10">
             {invalidOrExpiredLink && (

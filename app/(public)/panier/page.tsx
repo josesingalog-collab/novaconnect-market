@@ -15,7 +15,7 @@ export default async function CartPage() {
       <Breadcrumb items={[{ label: "Accueil", href: "/" }, { label: "Panier" }]} />
       <div>
         <p className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
-          NovaConnect Market · Panier
+          SAVPAY · Panier
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">Votre panier</h1>
       </div>

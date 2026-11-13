@@ -1,5 +1,5 @@
 ﻿-- ============================================================================
--- NOVACONNECT MARKET â€” Migration 0012
+-- SAVPAY â€” Migration 0012
 -- Livraison numÃ©rique : RPC `create_download_grant` â€” le DROIT de tÃ©lÃ©charger
 -- est DÃ‰RIVÃ‰ (jamais stockÃ©) : commande PAID + acheteur = auth.uid(), ou
 -- vendeur propriÃ©taire du fichier, ou admin. Chaque demande est journalisÃ©e

@@ -1,5 +1,5 @@
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0002
+-- SAVPAY — Migration 0002
 -- Profils utilisateurs liés à auth.users + garde anti-élévation de privilèges
 -- ============================================================================
 

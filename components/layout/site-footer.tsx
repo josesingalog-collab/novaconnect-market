@@ -106,10 +106,10 @@ export async function SiteFooter() {
             )}
             <li>
               <a
-                href="mailto:contact@novaconnect.market"
+                href="mailto:contact@savpay.market"
                 className="text-primary-foreground/70 transition-colors hover:text-primary-foreground"
               >
-                contact@novaconnect.market
+                contact@savpay.market
               </a>
             </li>
           </ul>

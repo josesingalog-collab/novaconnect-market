@@ -30,7 +30,7 @@ export default async function BecomeVendorPage() {
     <main className="mx-auto grid w-full max-w-5xl flex-1 gap-10 px-6 py-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-start lg:py-20">
       <section className="rounded-3xl bg-primary p-7 text-primary-foreground lg:sticky lg:top-8">
         <p className="text-xs font-bold tracking-[0.14em] text-primary-foreground/65 uppercase">
-          NovaConnect · Vendeurs
+          SAVPAY · Vendeurs
         </p>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight">Ouvrez votre vitrine.</h1>
         <p className="mt-4 text-sm leading-6 text-primary-foreground/75">

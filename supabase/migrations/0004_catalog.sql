@@ -1,5 +1,5 @@
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0004
+-- SAVPAY — Migration 0004
 -- Catalogue : catégories, produits, fichiers produits (privés)
 -- ============================================================================
 

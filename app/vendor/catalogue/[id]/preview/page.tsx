@@ -73,7 +73,7 @@ function PreviewCover({
             {productStatus === "PENDING_REVIEW"
               ? "La couverture ne peut pas être modifiée pour le moment."
               : productStatus === "PUBLISHED"
-                ? "Votre produit est visible sur NovaConnect."
+                ? "Votre produit est visible sur SAVPAY."
                 : "Ce produit est archivé."}
           </p>
         </Alert>
@@ -224,7 +224,7 @@ function ProductStatusBanner({ product }: { product: SellerProduct }) {
     return (
       <Alert variant="info">
         <span className="font-semibold">Produit publié</span>
-        <p className="mt-1">Votre produit est actuellement disponible sur NovaConnect.</p>
+        <p className="mt-1">Votre produit est actuellement disponible sur SAVPAY.</p>
       </Alert>
     );
   }

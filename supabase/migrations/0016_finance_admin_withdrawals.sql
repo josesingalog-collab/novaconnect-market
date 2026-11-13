@@ -1,5 +1,5 @@
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0016
+-- SAVPAY — Migration 0016
 -- Transitions admin sécurisées pour les retraits :
 --   PENDING → APPROVED → PROCESSING → PAID
 --   PENDING → REJECTED

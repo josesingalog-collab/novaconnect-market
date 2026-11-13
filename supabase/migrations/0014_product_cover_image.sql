@@ -1,5 +1,5 @@
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0014
+-- SAVPAY — Migration 0014
 -- Images de couverture : colonne thumbnail_path sur products
 -- ============================================================================
 -- Ajoute une colonne nullable thumbnail_path sur products.

@@ -1,4 +1,4 @@
-# Architecture — NovaConnect Market V1
+# Architecture — SAVPAY V1
 
 ## Vue générale
 

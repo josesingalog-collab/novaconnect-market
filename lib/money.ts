@@ -1,5 +1,5 @@
 /**
- * Système monétaire NovaConnect Market.
+ * Système monétaire SAVPAY.
  *
  * INVARIANTS (§68 — intégrité financière) :
  *  1. AUCUN float JavaScript dans les calculs. Tous les montants manipulés en

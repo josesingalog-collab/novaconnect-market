@@ -43,7 +43,7 @@ export function SubmitProductForm({
         <Alert variant="success">
           <span className="font-semibold">Produit publié !</span>
           <p className="mt-1">
-            Votre produit est maintenant visible dans le catalogue NovaConnect.
+            Votre produit est maintenant visible dans le catalogue SAVPAY.
           </p>
         </Alert>
         <div className="flex flex-col gap-3">
@@ -96,7 +96,7 @@ export function SubmitProductForm({
         open={open}
         onOpenChange={setOpen}
         title="Publier ce produit ?"
-        description="Votre produit sera immédiatement visible dans le catalogue NovaConnect."
+        description="Votre produit sera immédiatement visible dans le catalogue SAVPAY."
         actions={
           <>
             <Button variant="outline" onClick={() => setOpen(false)} disabled={pending}>

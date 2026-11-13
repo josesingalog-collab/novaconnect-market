@@ -1,5 +1,5 @@
 -- =============================================================================
--- NOVACONNECT MARKET â€” APPLICATION COMPLÃˆTE DU SCHÃ‰MA (fichier gÃ©nÃ©rÃ©, idempotent)
+-- SAVPAY â€” APPLICATION COMPLÃˆTE DU SCHÃ‰MA (fichier gÃ©nÃ©rÃ©, idempotent)
 -- Contenu = concatÃ©nation ordonnÃ©e des migrations 0001 -> 0012.
 --
 -- RÃ©exÃ©cutable sans danger : chaque objet est protÃ©gÃ© contre le doublon.
@@ -8,7 +8,7 @@
 
 -- >>> DEBUT MIGRATION 0001_extensions_enums.sql
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0001
+-- SAVPAY — Migration 0001
 -- Extensions, types énumérés, table de configuration, helper updated_at
 -- ============================================================================
 
@@ -90,7 +90,7 @@ on conflict (key) do nothing;
 
 -- >>> DEBUT MIGRATION 0002_profiles.sql
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0002
+-- SAVPAY — Migration 0002
 -- Profils utilisateurs liés à auth.users + garde anti-élévation de privilèges
 -- ============================================================================
 
@@ -218,7 +218,7 @@ create policy "profiles_update_self"
 
 -- >>> DEBUT MIGRATION 0003_vendors.sql
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0003
+-- SAVPAY — Migration 0003
 -- Boutiques vendeurs + garde sur statut/commission
 -- ============================================================================
 
@@ -308,7 +308,7 @@ create policy "vendors_update_own"
 
 -- >>> DEBUT MIGRATION 0004_catalog.sql
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0004
+-- SAVPAY — Migration 0004
 -- Catalogue : catégories, produits, fichiers produits (privés)
 -- ============================================================================
 
@@ -570,7 +570,7 @@ create policy "product_files_delete_owner"
 
 -- >>> DEBUT MIGRATION 0005_orders.sql
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0005
+-- SAVPAY — Migration 0005
 -- Commandes, lignes de commande (snapshots), paiements, événements webhook
 -- ============================================================================
 
@@ -711,7 +711,7 @@ alter table public.payment_events enable row level security;
 
 -- >>> DEBUT MIGRATION 0006_downloads.sql
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0006
+-- SAVPAY — Migration 0006
 -- Journal des téléchargements (audit) — le DROIT de télécharger est dérivé
 -- des order_items d'une commande PAID, jamais stocké ici.
 -- ============================================================================
@@ -738,7 +738,7 @@ create policy "downloads_select_own"
 
 -- >>> DEBUT MIGRATION 0007_finance.sql
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0007
+-- SAVPAY — Migration 0007
 -- Architecture financière : retraits à réservation atomique,
 -- ledger immuable, RPCs sécurisées, confirmation de paiement idempotente.
 --
@@ -1144,7 +1144,7 @@ grant execute on function public.confirm_order_payment(uuid) to service_role;
 
 -- >>> DEBUT MIGRATION 0008_extras.sql
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0008
+-- SAVPAY — Migration 0008
 -- Audit log, avis vérifiés, coupons, abonnements (squelette V1),
 -- bucket Storage privé, câblage des audits.
 -- ============================================================================
@@ -1655,7 +1655,7 @@ grant execute on function public.create_checkout_order(uuid[])
 
 -- >>> DEBUT MIGRATION 0012_download_grant.sql
 ﻿-- ============================================================================
--- NOVACONNECT MARKET â€” Migration 0012
+-- SAVPAY â€” Migration 0012
 -- Livraison numÃ©rique : RPC `create_download_grant` â€” le DROIT de tÃ©lÃ©charger
 -- est DÃ‰RIVÃ‰ (jamais stockÃ©) : commande PAID + acheteur = auth.uid(), ou
 -- vendeur propriÃ©taire du fichier, ou admin. Chaque demande est journalisÃ©e
@@ -1749,7 +1749,7 @@ revoke all on function public.create_download_grant(uuid) from public, anon;
 grant execute on function public.create_download_grant(uuid)
   to authenticated, service_role;
 -- ============================================================================
--- NOVACONNECT MARKET â€” Migration 0013
+-- SAVPAY â€” Migration 0013
 -- Storage : policies vendeur pour bucket privÃ© product-files
 -- ============================================================================
 -- Le bucket `product-files` existe dÃ©jÃ  (migration 0008) mais sans aucune
@@ -1837,7 +1837,7 @@ create policy "product_files_owner_delete"
 -- Contenu = migration 0014 (colonne thumbnail_path + policies Storage cover).
 
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0014
+-- SAVPAY — Migration 0014
 -- Images de couverture : colonne thumbnail_path sur products
 -- ============================================================================
 -- Ajoute une colonne nullable thumbnail_path sur products.

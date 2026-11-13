@@ -1,5 +1,5 @@
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0006
+-- SAVPAY — Migration 0006
 -- Journal des téléchargements (audit) — le DROIT de télécharger est dérivé
 -- des order_items d'une commande PAID, jamais stocké ici.
 -- ============================================================================

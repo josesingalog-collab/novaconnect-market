@@ -1,5 +1,5 @@
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0007
+-- SAVPAY — Migration 0007
 -- Architecture financière : retraits à réservation atomique,
 -- ledger immuable, RPCs sécurisées, confirmation de paiement idempotente.
 --

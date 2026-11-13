@@ -21,7 +21,7 @@ export function VendorCard({ vendor }: { vendor: ActiveVendor }) {
           // eslint-disable-next-line @next/next/no-img-element -- URL fournie par le vendeur
           <img src={vendor.logoUrl} alt="" className="h-full w-full object-cover" />
         ) : (
-          initials || "NC"
+          initials || "SA"
         )}
       </span>
       <span className="min-w-0">

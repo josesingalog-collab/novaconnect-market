@@ -1,5 +1,5 @@
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0008
+-- SAVPAY — Migration 0008
 -- Audit log, avis vérifiés, coupons, abonnements (squelette V1),
 -- bucket Storage privé, câblage des audits.
 -- ============================================================================

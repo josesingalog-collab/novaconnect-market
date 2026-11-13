@@ -1,5 +1,5 @@
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0005
+-- SAVPAY — Migration 0005
 -- Commandes, lignes de commande (snapshots), paiements, événements webhook
 -- ============================================================================
 

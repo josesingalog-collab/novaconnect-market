@@ -31,11 +31,11 @@ export default async function LoginPage({
     <main className="grid min-h-full flex-1 bg-white lg:grid-cols-2">
       <section className="hidden flex-col justify-between bg-primary p-12 text-white lg:flex">
         <Link href="/" className="text-xl font-semibold">
-          NovaConnect
+          SAVPAY
         </Link>
         <div className="max-w-md">
           <p className="text-sm font-semibold tracking-[0.16em] text-white/70 uppercase">
-            NovaConnect Market
+            SAVPAY
           </p>
           <h1 className="mt-4 text-5xl font-semibold tracking-[-0.05em]">
             Valorisez vos produits numériques.
@@ -44,12 +44,12 @@ export default async function LoginPage({
             Achetez, vendez et gérez vos ressources depuis un espace sécurisé.
           </p>
         </div>
-        <p className="text-sm text-white/60">NovaConnect, la plateforme des créateurs.</p>
+        <p className="text-sm text-white/60">SAVPAY, la plateforme des créateurs.</p>
       </section>
       <section className="flex items-center justify-center px-5 py-12 sm:px-10">
         <div className="w-full max-w-md">
           <Link href="/" className="text-sm font-semibold text-primary hover:underline">
-            ← NovaConnect
+            ← SAVPAY
           </Link>
           <p className="mt-10 text-sm text-muted-foreground">Ravi de vous revoir.</p>
           <LoginForm nextPath={nextPath} />

@@ -28,7 +28,7 @@ export default async function CheckoutPage() {
       />
       <div>
         <p className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
-          NovaConnect Market · Commande
+          SAVPAY · Commande
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
           Finaliser votre commande

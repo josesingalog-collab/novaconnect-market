@@ -79,8 +79,8 @@ export function AdminSidebar() {
       aria-label="Navigation administration"
     >
       <div className="flex h-14 items-center justify-center border-b border-border">
-        <span className="text-sm font-bold text-foreground" aria-label="NovaConnect">
-          NC
+        <span className="text-sm font-bold text-foreground" aria-label="SAVPAY">
+          SA
         </span>
       </div>
 

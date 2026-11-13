@@ -24,10 +24,10 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${vendor.storeName} — NovaConnect Market`,
+    title: `${vendor.storeName} — SAVPAY`,
     description:
       vendor.description ??
-      `Découvrez les produits numériques proposés par ${vendor.storeName} sur NovaConnect Market.`,
+      `Découvrez les produits numériques proposés par ${vendor.storeName} sur SAVPAY.`,
   };
 }
 
@@ -87,7 +87,7 @@ export default async function ShopPage({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <span className="text-2xl font-bold text-muted-foreground">{initials || "NC"}</span>
+              <span className="text-2xl font-bold text-muted-foreground">{initials || "SA"}</span>
             )}
           </div>
 

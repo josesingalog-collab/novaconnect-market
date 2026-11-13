@@ -138,10 +138,10 @@ export function SidebarNav({ collapsed }: SidebarNavProps) {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 text-sm font-bold">
               N
             </span>
-            NovaConnect
+            SAVPAY
           </span>
         ) : (
-          <span className="text-sm font-bold text-white" aria-label="NovaConnect">
+          <span className="text-sm font-bold text-white" aria-label="SAVPAY">
             N
           </span>
         )}

@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { formatMinorAmount, decimalStringToMinor } from "@/lib/money";
 
 export const metadata: Metadata = {
-  title: "Mes ventes - NovaConnect",
+  title: "Mes ventes - SAVPAY",
   robots: { index: false, follow: false },
 };
 
@@ -64,7 +64,7 @@ export default async function VentesPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">
-            NovaConnect vendeur
+            SAVPAY vendeur
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-foreground">Ventes</h1>
         </div>

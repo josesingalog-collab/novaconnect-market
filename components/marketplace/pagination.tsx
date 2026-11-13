@@ -12,7 +12,7 @@ function buildHref(params: CatalogueRouteParams, page: number): string {
 }
 
 function buildBaseHref(baseHref: string, page: number): string {
-  const url = new URL(baseHref, "https://novaconnect.local");
+  const url = new URL(baseHref, "https://savpay.local");
   if (page > 1) url.searchParams.set("page", String(page));
   else url.searchParams.delete("page");
   return `${url.pathname}${url.search}`;

@@ -17,7 +17,7 @@ export async function SiteHeader() {
           className="flex items-center gap-2.5 text-lg font-bold tracking-tight text-foreground"
         >
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-            NC
+            SA
           </span>
           <span className="hidden sm:inline">{APP_NAME}</span>
         </Link>

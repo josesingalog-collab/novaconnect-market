@@ -1,5 +1,5 @@
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0001
+-- SAVPAY — Migration 0001
 -- Extensions, types énumérés, table de configuration, helper updated_at
 -- ============================================================================
 

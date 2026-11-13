@@ -33,8 +33,8 @@ export function TwoFactorPanel({ nextPath, setup }: { nextPath: string; setup: b
     const supabase = createSupabaseBrowserClient();
     const { data, error: enrollError } = await supabase.auth.mfa.enroll({
       factorType: "totp",
-      friendlyName: "NovaConnect Authenticator",
-      issuer: "NovaConnect",
+      friendlyName: "SAVPAY Authenticator",
+      issuer: "SAVPAY",
     });
     if (enrollError || !data.totp) {
       const detail = enrollError?.message.toLowerCase() ?? "";
@@ -112,7 +112,7 @@ export function TwoFactorPanel({ nextPath, setup }: { nextPath: string; setup: b
   return (
     <section className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl shadow-primary/10 sm:p-8">
       <Link href="/" className="text-sm font-semibold text-primary hover:underline">
-        NovaConnect
+        SAVPAY
       </Link>
       <p className="mt-6 text-xs font-semibold tracking-[0.14em] text-primary uppercase">
         Sécurité
@@ -140,7 +140,7 @@ export function TwoFactorPanel({ nextPath, setup }: { nextPath: string; setup: b
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={qrCode}
-                alt="QR code pour configurer NovaConnect"
+                alt="QR code pour configurer SAVPAY"
                 className="mx-auto h-44 w-44"
               />
             )}

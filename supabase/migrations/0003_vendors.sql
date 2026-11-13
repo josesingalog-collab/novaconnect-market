@@ -1,5 +1,5 @@
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0003
+-- SAVPAY — Migration 0003
 -- Boutiques vendeurs + garde sur statut/commission
 -- ============================================================================
 

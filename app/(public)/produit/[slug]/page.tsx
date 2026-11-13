@@ -24,10 +24,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${product.title} — NovaConnect Market`,
+    title: `${product.title} — SAVPAY`,
     description:
       product.shortDescription ??
-      `${product.title} — disponible sur NovaConnect Market chez ${product.storeName}.`,
+      `${product.title} — disponible sur SAVPAY chez ${product.storeName}.`,
   };
 }
 

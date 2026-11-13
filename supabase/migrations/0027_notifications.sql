@@ -1,5 +1,5 @@
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0027
+-- SAVPAY — Migration 0027
 -- Notifications in-app S5+ (Phase 9) : table destinataire, RLS, garde
 -- read_at seul, fonction notify_user definer, triggers émetteurs
 -- (commande payée, statut retrait, statut produit, statut boutique).

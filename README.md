@@ -1,4 +1,4 @@
-# NovaConnect Market
+# SAVPAY
 
 Marketplace SaaS de produits numériques multi-vendeurs pour créateurs d'Afrique francophone (RDC en priorité) : e-books, formations, templates, fichiers CAD/BIM, scripts, ressources professionnelles.
 

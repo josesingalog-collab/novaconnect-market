@@ -1,5 +1,5 @@
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0015
+-- SAVPAY — Migration 0015
 -- Type de produit : enum product_type, colonne sur products
 -- ============================================================================
 -- Ajoute :

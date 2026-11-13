@@ -1,5 +1,5 @@
 /**
- * Configuration centrale NovaConnect Market (§47).
+ * Configuration centrale SAVPAY (§47).
  * Aucune valeur métier configurable ne doit être dispersée dans le code.
  *
  * NOTE V1 : ces constantes sont les valeurs par défaut de démarrage.
@@ -9,7 +9,7 @@
  */
 import type { CurrencyCode } from "@/lib/money";
 
-export const APP_NAME = "NovaConnect Market" as const;
+export const APP_NAME = "SAVPAY" as const;
 export const APP_DESCRIPTION =
   "Marketplace de produits numériques pour les créateurs d'Afrique francophone : e-books, formations, templates, fichiers CAD/BIM, scripts et ressources professionnelles." as const;
 

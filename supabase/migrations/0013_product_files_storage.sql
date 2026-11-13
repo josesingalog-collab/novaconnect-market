@@ -1,5 +1,5 @@
 -- ============================================================================
--- NOVACONNECT MARKET — Migration 0013
+-- SAVPAY — Migration 0013
 -- Storage : policies vendeur pour bucket privé product-files
 -- ============================================================================
 -- Le bucket `product-files` existe déjà (migration 0008) mais sans aucune

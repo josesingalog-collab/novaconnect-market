@@ -5,9 +5,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listPublicProducts, type PublicProductPage } from "@/services/products/public";
 
 export const metadata = {
-  title: "NovaConnect Market | Votre vitrine numérique",
+  title: "SAVPAY | Votre vitrine numérique",
   description:
-    "Créez votre boutique, publiez vos ressources numériques et découvrez les créations de la communauté NovaConnect.",
+    "Créez votre boutique, publiez vos ressources numériques et découvrez les créations de la communauté SAVPAY.",
   robots: { index: true, follow: true },
 };
 
@@ -39,7 +39,7 @@ const faqs = [
     "Vous pouvez mettre à jour les informations et les fichiers de votre produit avant sa première vente.",
   ],
   [
-    "À qui s'adresse NovaConnect ?",
+    "À qui s'adresse SAVPAY ?",
     "Aux créateurs qui souhaitent organiser et présenter des guides, templates, formations et autres ressources numériques.",
   ],
 ] as const;
@@ -82,7 +82,7 @@ export default async function HomePage() {
               size="lg"
               className="min-h-12 border-primary/20 bg-white/85 px-7 text-primary hover:bg-primary/5"
             >
-              <Link href="#avantages">Découvrir NovaConnect</Link>
+              <Link href="#avantages">Découvrir SAVPAY</Link>
             </Button>
           </div>
           <p className="mt-5 text-sm text-muted-foreground">
@@ -98,7 +98,7 @@ export default async function HomePage() {
               <span className="h-2 w-2 rounded-full bg-primary/15" />
             </div>
             <div className="rounded-md border border-border bg-white px-3 py-1 text-[10px] font-medium text-muted-foreground">
-              novaconnect.market/espace-vendeur
+              savpay.market/espace-vendeur
             </div>
             <span className="w-8" aria-hidden="true" />
           </div>
@@ -108,7 +108,7 @@ export default async function HomePage() {
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky text-[9px] font-bold text-primary">
                   NC
                 </span>
-                <span className="hidden text-sm font-bold sm:inline">NovaConnect</span>
+                <span className="hidden text-sm font-bold sm:inline">SAVPAY</span>
               </div>
               <div className="mt-5 space-y-2 text-[10px] sm:text-xs">
                 {["Vue d'ensemble", "Mes produits", "Ma boutique", "Commandes"].map(
@@ -375,7 +375,7 @@ export default async function HomePage() {
             Votre prochaine étape
           </p>
           <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-bold tracking-[-0.045em] sm:text-4xl">
-            Lancez votre vitrine numérique avec NovaConnect.
+            Lancez votre vitrine numérique avec SAVPAY.
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-white/70 sm:text-base">
             Donnez à vos ressources un espace clair, personnel et prêt à être découvert.
