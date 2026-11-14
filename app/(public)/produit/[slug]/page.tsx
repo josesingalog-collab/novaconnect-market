@@ -134,7 +134,7 @@ export default async function ProductPage({ params }: PageProps) {
           </section>
 
           {/* Réassurance */}
-          <ul className="grid gap-3 text-sm text-muted-foreground">
+          <ul className="grid gap-3 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-soft sm:p-6">
             <li className="flex items-center gap-2">
               <span className="text-success" aria-hidden="true">
                 ✓
@@ -147,7 +147,39 @@ export default async function ProductPage({ params }: PageProps) {
               </span>
               Fichiers sécurisés, téléchargement réservé aux acheteurs
             </li>
+            <li className="flex items-center gap-2">
+              <span className="text-success" aria-hidden="true">
+                ✓
+              </span>
+              Lien de téléchargement unique, valable 60 secondes
+            </li>
           </ul>
+
+          {/* FAQ courte produit */}
+          <details className="group rounded-2xl border border-border bg-card px-5 py-4 shadow-soft sm:px-6">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-bold text-foreground [&::-webkit-details-marker]:hidden">
+              Comment vais-je recevoir mon fichier ?
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-primary transition-transform group-open:rotate-45">
+                +
+              </span>
+            </summary>
+            <p className="pt-3 text-sm leading-7 text-muted-foreground">
+              Dès que votre paiement est confirmé, votre fichier est disponible dans votre espace
+              via un lien de téléchargement sécurisé, réservé à votre commande.
+            </p>
+          </details>
+          <details className="group rounded-2xl border border-border bg-card px-5 py-4 shadow-soft sm:px-6">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-bold text-foreground [&::-webkit-details-marker]:hidden">
+              Que faire en cas de problème ?
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-primary transition-transform group-open:rotate-45">
+                +
+              </span>
+            </summary>
+            <p className="pt-3 text-sm leading-7 text-muted-foreground">
+              Le vendeur reste votre premier contact. En cas de difficulté, vous pouvez aussi le
+              joindre depuis sa page boutique.
+            </p>
+          </details>
         </div>
       </div>
 

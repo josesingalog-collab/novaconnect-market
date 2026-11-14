@@ -28,7 +28,7 @@ export default async function LoginPage({
     typeof params.next === "string" && params.next.startsWith("/") ? params.next : "/dashboard";
 
   return (
-    <main className="grid min-h-full flex-1 bg-white lg:grid-cols-2">
+    <main className="grid min-h-full flex-1 bg-background lg:grid-cols-2">
       <section className="hidden flex-col justify-between bg-primary p-12 text-white lg:flex">
         <Link href="/" className="text-xl font-semibold">
           SAVPAY

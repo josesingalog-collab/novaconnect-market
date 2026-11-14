@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export function ProductCard({ product }: { product: PublicProduct }) {
   return (
-    <div className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-md">
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-soft transition-shadow hover:shadow-lift">
       <Link href={`/produit/${product.slug}`} className="block">
         <div className="flex aspect-square items-center justify-center bg-muted p-2 text-3xl font-semibold text-muted-foreground">
           {product.thumbnailUrl !== null ? (
@@ -22,9 +22,11 @@ export function ProductCard({ product }: { product: PublicProduct }) {
           )}
         </div>
         <div className="flex flex-1 flex-col gap-2 p-4">
-          <h3 className="line-clamp-2 text-base font-semibold text-foreground">{product.title}</h3>
+          <h3 className="line-clamp-2 text-base font-semibold text-foreground transition-colors group-hover:text-primary">
+            {product.title}
+          </h3>
           <p className="text-xs text-muted-foreground">{product.storeName}</p>
-          <p className="mt-auto text-sm font-bold text-foreground">
+          <p className="mt-auto text-base font-bold text-foreground">
             {formatPrice(product.price, product.currency)}
           </p>
         </div>

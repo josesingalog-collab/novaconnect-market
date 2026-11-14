@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: APP_DESCRIPTION,
 };
 
+const themeInitScript = `(function(){try{var t=localStorage.getItem("savpay-theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}})();`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -18,6 +20,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className="h-full antialiased"
       suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="flex min-h-full flex-col">
         <a href="#main-content" className="skip-link">
           Aller au contenu principal

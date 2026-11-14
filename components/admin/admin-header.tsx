@@ -62,7 +62,7 @@ export function AdminHeader({ profile }: { profile: UserProfile | null }) {
             </div>
           </details>
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-            NC
+            SA
           </span>
           <span className="hidden text-xs font-medium tracking-widest text-muted-foreground uppercase lg:block">
             Administration

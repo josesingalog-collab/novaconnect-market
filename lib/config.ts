@@ -70,7 +70,7 @@ export const STORAGE_BUCKETS = {
 } as const;
 
 // --- Commandes ---
-export const ORDER_NUMBER_PREFIX = "NC";
+export const ORDER_NUMBER_PREFIX = "SA";
 
 // --- Catalogue ---
 export const PRODUCTS_PAGE_SIZE = 24;

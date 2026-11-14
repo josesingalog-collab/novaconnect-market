@@ -17,7 +17,7 @@ export default async function ForgotPasswordPage({
   const invalidOrExpiredLink = error === "invalid_or_expired_link";
 
   return (
-    <main className="grid min-h-full flex-1 bg-white lg:grid-cols-2">
+    <main className="grid min-h-full flex-1 bg-background lg:grid-cols-2">
       <section className="hidden flex-col justify-between bg-primary p-12 text-white lg:flex">
         <Link href="/" className="text-xl font-semibold">
           SAVPAY

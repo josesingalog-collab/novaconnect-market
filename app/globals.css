@@ -1,35 +1,87 @@
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
+/* ============================================================
+   SAVPAY — Design system "Bleu nuit & Or"
+   Clair par défaut · Sombre via <html class="dark">
+   ============================================================ */
+
 :root {
   --font-montserrat: "Montserrat";
   --font-poppins: "Poppins";
-  --background: #ffffff;
-  --foreground: #172554;
-  --border: #dbe4f0;
-  --ring: #2563eb;
-  --primary: #2563eb;
+
+  /* --- Mode clair --- */
+  --background: #f7f9fc;
+  --foreground: #0c1b33;
+
+  --border: #dce4f0;
+  --ring: #0d2b5b;
+
+  --primary: #0d2b5b;
   --primary-foreground: #ffffff;
-  --blue: #2563eb;
-  --sky: #38bdf8;
-  --secondary: #eff6ff;
-  --secondary-foreground: #1e3a8a;
-  --muted: #f6f8fc;
-  --muted-foreground: #64748b;
-  --accent: #eff6ff;
-  --accent-foreground: #1d4ed8;
-  --destructive: #dc2626;
+
+  --blue: #2f63c9;
+  --sky: #3aa0d8;
+
+  --secondary: #eef3fa;
+  --secondary-foreground: #16335f;
+
+  --muted: #f0f4fa;
+  --muted-foreground: #5d6d86;
+
+  --accent: #eef3fa;
+  --accent-foreground: #16335f;
+
+  --destructive: #d92d20;
   --destructive-foreground: #ffffff;
-  --success: #16a34a;
+  --success: #12905f;
   --success-foreground: #ffffff;
   --warning: #d97706;
   --warning-foreground: #ffffff;
-  --info: #2563eb;
+  --info: #2f63c9;
   --info-foreground: #ffffff;
+
   --card: #ffffff;
-  --card-foreground: #172554;
+  --card-foreground: #0c1b33;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
+  --popover-foreground: #0c1b33;
+}
+
+html.dark {
+  --background: #0a1120;
+  --foreground: #e7edf7;
+
+  --border: #1d2b45;
+  --ring: #7fa8e8;
+
+  --primary: #3d66b0;
+  --primary-foreground: #ffffff;
+
+  --blue: #5b8ad9;
+  --sky: #6fc3ee;
+
+  --secondary: #131f38;
+  --secondary-foreground: #d9e3f2;
+
+  --muted: #0e1830;
+  --muted-foreground: #93a5c0;
+
+  --accent: #14243e;
+  --accent-foreground: #b9cff4;
+
+  --destructive: #e5484d;
+  --destructive-foreground: #ffffff;
+  --success: #2e9e5b;
+  --success-foreground: #ffffff;
+  --warning: #e09a1f;
+  --warning-foreground: #0a1120;
+  --info: #4e7fd1;
+  --info-foreground: #ffffff;
+
+  --card: #0f1930;
+  --card-foreground: #e7edf7;
+  --popover: #0f1930;
+  --popover-foreground: #e7edf7;
 }
 
 @theme inline {
@@ -68,6 +120,13 @@
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
   --radius-full: 9999px;
+  --shadow-soft: 0 1px 2px rgb(13 43 91 / 0.05), 0 8px 24px -10px rgb(13 43 91 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(13 43 91 / 0.06), 0 16px 40px -12px rgb(13 43 91 / 0.2);
+}
+
+section[id],
+[id="avantages"] {
+  scroll-margin-top: 5rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -97,6 +156,11 @@ h6,
 button,
 label {
   font-family: var(--font-heading);
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 /* Focus visible styles */
@@ -155,4 +219,9 @@ label {
 /* Prevent layout shift from scrollbar */
 html {
   scrollbar-gutter: stable;
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
 }

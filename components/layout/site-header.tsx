@@ -2,6 +2,7 @@ import Link from "next/link";
 import { logoutAction } from "@/app/actions/auth";
 import { CartBadge } from "@/components/cart/cart-badge";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { getCurrentProfile } from "@/lib/profile";
 import { APP_NAME } from "@/lib/config";
 
@@ -36,6 +37,12 @@ export async function SiteHeader() {
             Catalogue
           </Link>
           <Link
+            href="/#tarification"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Tarifs
+          </Link>
+          <Link
             href="/dashboard/devenir-vendeur"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
@@ -44,6 +51,7 @@ export async function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle />
           {connected && <NotificationBell />}
           <CartBadge />
           {connected ? (
@@ -97,7 +105,8 @@ export async function SiteHeader() {
           )}
         </div>
 
-        <div className="md:hidden">
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
           {connected && <NotificationBell />}
           <CartBadge />
         </div>
@@ -134,6 +143,12 @@ export async function SiteHeader() {
               className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               Catalogue
+            </Link>
+            <Link
+              href="/#tarification"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              Tarifs
             </Link>
               <Link
                 href="/dashboard/devenir-vendeur"

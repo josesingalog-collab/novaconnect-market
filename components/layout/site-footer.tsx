@@ -8,11 +8,11 @@ export async function SiteFooter() {
 
   return (
     <footer className="border-t border-border bg-primary text-primary-foreground">
-      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-4 lg:gap-12 lg:px-8">
+      <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-5 lg:gap-10 lg:px-8">
         <div className="lg:col-span-1">
           <p className="flex items-center gap-2.5 text-lg font-bold tracking-tight">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-foreground/20 text-sm font-bold text-primary-foreground">
-              NC
+              SA
             </span>
             {APP_NAME}
           </p>
@@ -111,6 +111,38 @@ export async function SiteFooter() {
               >
                 contact@savpay.market
               </a>
+            </li>
+            <li>
+              <Link
+                href="/contact"
+                className="text-primary-foreground/70 transition-colors hover:text-primary-foreground"
+              >
+                Nous contacter
+              </Link>
+            </li>
+          </ul>
+        </nav>
+
+        <nav aria-label="Légal">
+          <p className="text-xs font-semibold tracking-widest text-primary-foreground/60 uppercase">
+            Légal
+          </p>
+          <ul className="mt-3 space-y-2 text-sm">
+            <li>
+              <Link
+                href="/conditions-generales"
+                className="text-primary-foreground/70 transition-colors hover:text-primary-foreground"
+              >
+                Conditions générales
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/politique-confidentialite"
+                className="text-primary-foreground/70 transition-colors hover:text-primary-foreground"
+              >
+                Politique de confidentialité
+              </Link>
             </li>
           </ul>
         </nav>
