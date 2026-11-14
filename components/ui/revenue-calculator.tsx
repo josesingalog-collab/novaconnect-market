@@ -68,10 +68,13 @@ export function RevenueCalculator({ commissionPercent }: RevenueCalculatorProps)
         step={range.step}
         value={gross}
         onChange={(event) => setGross(Number(event.target.value))}
-        className="mt-2 w-full accent-[var(--primary)]"
+        className="mt-2 w-full accent-primary"
       />
 
-      <p className="mt-4 rounded-xl bg-secondary px-4 py-3 text-sm text-secondary-foreground">
+      <p
+        key={`${currency}-${gross}`}
+        className="animate-fade-in mt-4 rounded-xl bg-secondary px-4 py-3 text-sm text-secondary-foreground"
+      >
         Vous gardez{" "}
         <strong className="font-bold">{formatAmount(net, currency)}</strong> après la commission de{" "}
         {commissionPercent}&nbsp;%.

@@ -146,7 +146,7 @@ export default async function CataloguePage({
           }
           action={
             hasActiveFilters
-              ? { label: "Voir tous les produits", href: "/catalogue" }
+              ? { label: "Voir le catalogue", href: "/catalogue" }
               : { label: "Voir le catalogue", href: "/catalogue" }
           }
         />

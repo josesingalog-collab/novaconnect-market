@@ -134,7 +134,7 @@ export default async function OrdersPage() {
             </svg>
           }
           title="Aucune commande pour le moment"
-          description="Découvrez les produits digitaux disponibles sur SAVPAY."
+          description="Découvrez les produits numériques disponibles sur SAVPAY."
           action={{ label: "Explorer le catalogue", href: "/catalogue" }}
         />
       ) : (

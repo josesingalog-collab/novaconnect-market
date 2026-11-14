@@ -185,7 +185,7 @@ export default async function ProductPage({ params }: PageProps) {
 
       {/* DESCRIPTION */}
       {product.description !== null && (
-        <section className="mt-16">
+        <section className="mt-16 sm:mt-20">
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
             À propos de ce produit
           </h2>
@@ -197,7 +197,7 @@ export default async function ProductPage({ params }: PageProps) {
 
       {/* PRODUITS SIMILAIRES */}
       {similarProductsFiltered.length > 0 && (
-        <section className="mt-16 scroll-mt-20">
+        <section className="mt-16 scroll-mt-20 sm:mt-20">
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
             Vous pourriez aussi aimer
           </h2>

@@ -62,7 +62,7 @@ export function AddToCartButton({
     if (!showSticky) return null;
 
     return (
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 shadow-[0_-8px_24px_rgba(15,37,86,0.12)] backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 shadow-float backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-6xl items-center gap-3">
           <p className="min-w-0 flex-1 truncate text-lg font-bold tracking-tight text-foreground">
             {formatPrice(product.price, product.currency)}

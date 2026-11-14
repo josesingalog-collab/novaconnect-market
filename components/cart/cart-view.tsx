@@ -31,8 +31,8 @@ export function CartView({ authenticated }: { authenticated: boolean }) {
           </svg>
         }
         title="Votre panier est vide"
-        description="Découvrez nos produits digitaux et trouvez les ressources dont vous avez besoin."
-        action={{ label: "Découvrir le catalogue", href: "/catalogue" }}
+        description="Découvrez nos produits numériques et trouvez les ressources dont vous avez besoin."
+        action={{ label: "Voir le catalogue", href: "/catalogue" }}
       />
     );
   }

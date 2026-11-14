@@ -173,14 +173,14 @@ export default async function ShopPage({
             }
             title="Cette boutique ne propose pas encore de produits"
             description="Les produits de cette boutique apparaîtront ici lorsqu'ils seront disponibles."
-            action={{ label: "Découvrir le catalogue", href: "/catalogue" }}
+            action={{ label: "Voir le catalogue", href: "/catalogue" }}
           />
         )}
       </section>
 
       <div className="flex justify-center pb-4">
         <Button asChild variant="outline" size="lg">
-          <Link href="/catalogue">Découvrir tous les produits</Link>
+          <Link href="/catalogue">Voir le catalogue</Link>
         </Button>
       </div>
     </main>

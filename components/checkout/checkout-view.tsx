@@ -93,7 +93,7 @@ export function CheckoutView({
           </svg>
         }
         title="Aucun article à commander"
-        description="Découvrez nos produits digitaux et trouvez les ressources dont vous avez besoin."
+        description="Découvrez nos produits numériques et trouvez les ressources dont vous avez besoin."
         action={{ label: "Explorer le catalogue", href: "/catalogue" }}
       />
     );
@@ -586,7 +586,7 @@ function OrderConfirmation({
             href="/catalogue"
             className="rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Découvrir d&apos;autres produits
+            Voir d&apos;autres produits
           </Link>
           <Link
             href="/dashboard/commandes"

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export function ProductCard({ product }: { product: PublicProduct }) {
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-soft transition-shadow hover:shadow-lift">
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-soft transition-[box-shadow,transform] duration-200 hover:shadow-lift hover:-translate-y-0.5">
       <Link href={`/produit/${product.slug}`} className="block">
         <div className="flex aspect-square items-center justify-center bg-muted p-2 text-3xl font-semibold text-muted-foreground">
           {product.thumbnailUrl !== null ? (

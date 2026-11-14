@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/marketplace/product-card";
 import { Button } from "@/components/ui/button";
+import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { TestimonialCard } from "@/components/ui/testimonial-card";
 import { RevenueCalculator } from "@/components/ui/revenue-calculator";
@@ -163,7 +164,7 @@ export default async function HomePage() {
   return (
     <main className="flex-1 overflow-hidden bg-background">
       {/* HERO */}
-      <section className="relative isolate border-b border-primary/10 bg-[linear-gradient(to_right,rgba(13,43,91,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(13,43,91,0.06)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] px-4 pt-16 sm:px-6 sm:pt-24 lg:px-8 lg:pt-28">
+      <section className="relative isolate border-b border-primary/10 grid-pattern px-4 pt-16 sm:px-6 sm:pt-24 lg:px-8 lg:pt-28">
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-card/30 via-background/80 to-background" />
         <div className="mx-auto max-w-4xl text-center">
           <p className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-card/85 px-3 py-1.5 text-xs font-semibold tracking-[0.13em] text-primary uppercase shadow-sm">
@@ -175,8 +176,8 @@ export default async function HomePage() {
             <span className="text-primary">Partagez ce que vous créez.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
-            La plateforme pour créer votre boutique, organiser vos ressources numériques et les
-            présenter dans un espace à votre image.
+            Créez votre boutique, publiez vos produits numériques et partagez-les avec votre
+            audience.
           </p>
           <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
             <Button asChild size="lg" className="min-h-12 px-7 shadow-lift">
@@ -188,7 +189,7 @@ export default async function HomePage() {
               size="lg"
               className="min-h-12 border-primary/20 bg-card/85 px-7 text-primary hover:bg-primary/5"
             >
-              <Link href="#avantages">Découvrir SAVPAY</Link>
+              <Link href="#tarification">Voir les tarifs</Link>
             </Button>
           </div>
           <ul className="mx-auto mt-8 flex max-w-3xl flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-muted-foreground sm:text-sm">
@@ -208,7 +209,7 @@ export default async function HomePage() {
         </div>
 
         {/* CAPTURE — aperçu de l'espace vendeur */}
-        <div className="mx-auto mt-14 w-full max-w-5xl overflow-hidden rounded-t-[1.75rem] border border-border bg-card shadow-[0_-8px_50px_rgba(13,43,91,0.18)] sm:mt-16">
+        <div className="mx-auto mt-14 w-full max-w-5xl overflow-hidden rounded-t-[1.75rem] border border-border bg-card shadow-mockup sm:mt-16">
           <div className="flex items-center justify-between border-b border-border bg-muted/65 px-3 py-2.5 sm:px-5">
             <div className="flex gap-1.5" aria-hidden="true">
               <span className="h-2 w-2 rounded-full bg-primary/25" />
@@ -297,11 +298,13 @@ export default async function HomePage() {
       {/* CHIFFRES DE CONFIANCE */}
       <section className="border-b border-border bg-card px-4 sm:px-6 lg:px-8">
         <div className="mx-auto grid w-full max-w-6xl divide-y divide-border sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x">
-          {trustStats.map(([value, label]) => (
-            <div key={value} className="px-2 py-5 text-center sm:px-5 md:py-6">
-              <p className="text-xl font-bold text-primary sm:text-2xl">{value}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{label}</p>
-            </div>
+          {trustStats.map(([value, label], index) => (
+            <Reveal key={value} delay={index * 70}>
+              <div className="px-2 py-5 text-center sm:px-5 md:py-6">
+                <p className="text-xl font-bold text-primary sm:text-2xl">{value}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{label}</p>
+              </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -316,7 +319,7 @@ export default async function HomePage() {
           title="Plus qu'un lien : un espace qui porte votre signature."
         />
         <div className="mt-12 grid gap-5 lg:grid-cols-12">
-          <article className="relative overflow-hidden rounded-3xl bg-primary p-7 text-primary-foreground shadow-soft sm:p-9 lg:col-span-7">
+          <Reveal delay={0} className="relative overflow-hidden rounded-3xl bg-primary p-7 text-primary-foreground shadow-soft sm:p-9 lg:col-span-7">
             <div className="absolute -top-16 -right-12 h-48 w-48 rounded-full bg-blue/30 blur-2xl" />
             <p className="relative text-xs font-semibold tracking-[0.15em] text-sky uppercase">
               Une vitrine qui vous ressemble
@@ -337,9 +340,9 @@ export default async function HomePage() {
                 <p className="text-xs text-white/55">Créations numériques</p>
               </div>
             </div>
-          </article>
+          </Reveal>
 
-          <article className="rounded-3xl border border-border bg-card p-7 shadow-soft sm:p-9 lg:col-span-5">
+          <Reveal delay={90} className="rounded-3xl border border-border bg-card p-7 shadow-soft sm:p-9 lg:col-span-5">
             <FeatureIcon name="plus" />
             <h3 className="mt-8 text-xl font-bold tracking-tight text-foreground">
               Vos ressources, bien organisées.
@@ -363,9 +366,9 @@ export default async function HomePage() {
                 ),
               )}
             </div>
-          </article>
+          </Reveal>
 
-          <article className="rounded-3xl border border-border bg-secondary p-7 sm:p-9 lg:col-span-5">
+          <Reveal delay={140} className="rounded-3xl border border-border bg-secondary p-7 sm:p-9 lg:col-span-5">
             <p className="text-xs font-semibold tracking-[0.15em] text-primary uppercase">
               Un parcours direct
             </p>
@@ -375,9 +378,9 @@ export default async function HomePage() {
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
               Passez de votre idée à une page publique sans construire votre propre site.
             </p>
-          </article>
+          </Reveal>
 
-          <article className="rounded-3xl border border-border bg-card p-7 shadow-soft sm:p-9 lg:col-span-7">
+          <Reveal delay={190} className="rounded-3xl border border-border bg-card p-7 shadow-soft sm:p-9 lg:col-span-7">
             <div className="flex flex-col justify-between gap-7 sm:flex-row sm:items-end">
               <div className="max-w-md">
                 <p className="text-xs font-semibold tracking-[0.15em] text-primary uppercase">
@@ -404,7 +407,7 @@ export default async function HomePage() {
                 ))}
               </div>
             </div>
-          </article>
+          </Reveal>
         </div>
       </section>
 
@@ -418,16 +421,18 @@ export default async function HomePage() {
           />
           <div className="relative mt-14 grid gap-8 md:grid-cols-3 md:gap-10">
             <div className="absolute top-7 right-[17%] left-[17%] hidden h-px bg-border md:block" />
-            {steps.map(([number, title, description]) => (
-              <article key={number} className="relative text-center">
-                <span className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-background text-sm font-bold text-primary shadow-sm">
-                  {number}
-                </span>
-                <h3 className="mt-6 text-lg font-bold text-foreground">{title}</h3>
-                <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-muted-foreground">
-                  {description}
-                </p>
-              </article>
+            {steps.map(([number, title, description], index) => (
+              <Reveal key={number} delay={index * 110}>
+                <article className="relative text-center">
+                  <span className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-background text-sm font-bold text-primary shadow-sm">
+                    {number}
+                  </span>
+                  <h3 className="mt-6 text-lg font-bold text-foreground">{title}</h3>
+                  <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-muted-foreground">
+                    {description}
+                  </p>
+                </article>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -441,17 +446,16 @@ export default async function HomePage() {
           lead="Chaque fonctionnalité est pensée pour les créateurs : simple au quotidien, solide sur la sécurité."
         />
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature) => (
-            <article
-              key={feature.title}
-              className="rounded-2xl border border-border bg-card p-6 shadow-soft transition-shadow hover:shadow-lift"
-            >
-              <FeatureIcon name={feature.icon} />
-              <h3 className="mt-5 text-base font-bold text-foreground">{feature.title}</h3>
-              <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                {feature.description}
-              </p>
-            </article>
+          {features.map((feature, index) => (
+            <Reveal key={feature.title} delay={(index % 3) * 80}>
+              <article className="h-full rounded-2xl border border-border bg-card p-6 shadow-soft transition-shadow hover:shadow-lift">
+                <FeatureIcon name={feature.icon} />
+                <h3 className="mt-5 text-base font-bold text-foreground">{feature.title}</h3>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                  {feature.description}
+                </p>
+              </article>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -493,8 +497,10 @@ export default async function HomePage() {
           title="Des créateurs, des boutiques, des ventes."
         />
         <div className="mt-12 grid gap-5 md:grid-cols-3">
-          {testimonials.map((testimonial) => (
-            <TestimonialCard key={testimonial.name} {...testimonial} />
+          {testimonials.map((testimonial, index) => (
+            <Reveal key={testimonial.name} delay={index * 110}>
+              <TestimonialCard {...testimonial} />
+            </Reveal>
           ))}
         </div>
       </section>
@@ -512,7 +518,8 @@ export default async function HomePage() {
             lead="Pas d'abonnement, pas de frais cachés. SAVPAY ne prélève que lors de vos ventes."
           />
           <div className="mt-12 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-            <div className="rounded-3xl border border-primary/20 bg-primary px-7 py-10 text-primary-foreground shadow-lift sm:px-9">
+            <Reveal delay={0}>
+              <div className="rounded-3xl border border-primary/20 bg-primary px-7 py-10 text-primary-foreground shadow-lift sm:px-9">
               <p className="text-xs font-semibold tracking-[0.16em] text-sky uppercase">
                 SAVPAY
               </p>
@@ -547,8 +554,11 @@ export default async function HomePage() {
               >
                 <Link href="/dashboard/devenir-vendeur">Créer ma boutique</Link>
               </Button>
-            </div>
-            <RevenueCalculator commissionPercent={commissionPercent} />
+              </div>
+            </Reveal>
+            <Reveal delay={120}>
+              <RevenueCalculator commissionPercent={commissionPercent} />
+            </Reveal>
           </div>
         </div>
       </section>

@@ -31,7 +31,7 @@ export default async function DashboardPage() {
   const isVendor = current.profile.role === "VENDOR";
 
   return (
-    <main className="flex min-h-full flex-1 flex-col bg-background">
+    <main className="animate-fade-in flex min-h-full flex-1 flex-col bg-background">
       <header className="flex h-20 items-center justify-between border-b border-border px-5 sm:px-10">
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-primary">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
@@ -60,7 +60,7 @@ export default async function DashboardPage() {
               </div>
               {!vendor && (
                 <Button asChild>
-                  <Link href="/dashboard/devenir-vendeur">Créer une boutique</Link>
+                  <Link href="/dashboard/devenir-vendeur">Créer ma boutique</Link>
                 </Button>
               )}
             </div>

@@ -16,7 +16,11 @@ export function SectionHeading({ eyebrow, title, lead, align = "left" }: Section
       <h2 className="mt-4 text-3xl font-bold tracking-[-0.045em] text-foreground sm:text-4xl">
         {title}
       </h2>
-      {lead !== undefined && <p className="mt-4 text-base leading-8 text-muted-foreground">{lead}</p>}
+      {lead !== undefined && (
+        <p className="mt-4 text-base leading-8 text-muted-foreground lg:text-lg">
+          {lead}
+        </p>
+      )}
     </div>
   );
 }
