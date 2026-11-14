@@ -61,7 +61,7 @@ export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
       <Card
         ref={ref}
         variant="bordered"
-        className={["overflow-hidden rounded-2xl bg-card p-1 shadow-sm", className]
+        className={["overflow-hidden rounded-2xl bg-card p-1 shadow-soft", className]
           .filter(Boolean)
           .join(" ")}
         {...props}
@@ -69,7 +69,11 @@ export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(
         <CardContent className="flex min-h-28 flex-col gap-2 p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-muted-foreground">{label}</span>
-            {icon && <span className="text-muted-foreground">{icon}</span>}
+            {icon && (
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary text-primary">
+                {icon}
+              </span>
+            )}
           </div>
           <div className="text-2xl font-semibold tracking-tight text-foreground">{value}</div>
           {description && <p className="text-xs text-muted-foreground">{description}</p>}

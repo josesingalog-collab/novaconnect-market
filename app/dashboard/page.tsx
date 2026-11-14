@@ -31,11 +31,11 @@ export default async function DashboardPage() {
   const isVendor = current.profile.role === "VENDOR";
 
   return (
-    <main className="flex min-h-full flex-1 flex-col bg-white">
+    <main className="flex min-h-full flex-1 flex-col bg-background">
       <header className="flex h-20 items-center justify-between border-b border-border px-5 sm:px-10">
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-primary">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">
-            N
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+            SA
           </span>
           SAVPAY
         </Link>
@@ -123,7 +123,7 @@ export default async function DashboardPage() {
               </Link>
               <Link
                 href="/dashboard/devenir-vendeur"
-                className="rounded-2xl bg-primary p-6 text-white shadow-lg shadow-primary/20 transition-colors hover:bg-primary/90"
+                className="rounded-2xl bg-primary p-6 text-white shadow-lift transition-colors hover:bg-primary/90"
               >
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 text-xl">
                   +

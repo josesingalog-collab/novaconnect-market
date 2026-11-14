@@ -25,7 +25,7 @@ export default async function TwoFactorPage({
   const nextPath = safeInternalPath(params.next);
 
   return (
-    <main className="flex min-h-full flex-1 items-center justify-center bg-[#f8fbff] px-4 py-12 sm:px-6">
+    <main className="flex min-h-full flex-1 items-center justify-center bg-background px-4 py-12 sm:px-6">
       <TwoFactorPanel nextPath={nextPath} setup={params.setup === "1"} />
     </main>
   );

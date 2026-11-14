@@ -125,7 +125,7 @@ export function SidebarNav({ collapsed }: SidebarNavProps) {
   return (
     <aside
       className={[
-        "hidden bg-[#3537ba] text-white shadow-xl shadow-primary/20 lg:fixed lg:top-0 lg:left-0 lg:z-30 lg:flex lg:h-screen lg:w-60 lg:flex-col",
+        "hidden bg-primary text-white shadow-soft lg:fixed lg:top-0 lg:left-0 lg:z-30 lg:flex lg:h-screen lg:w-60 lg:flex-col",
         collapsed ? "lg:w-16" : "lg:w-60",
       ]
         .filter(Boolean)
@@ -136,13 +136,13 @@ export function SidebarNav({ collapsed }: SidebarNavProps) {
         {!collapsed ? (
           <span className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-white">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 text-sm font-bold">
-              N
+              SA
             </span>
             SAVPAY
           </span>
         ) : (
           <span className="text-sm font-bold text-white" aria-label="SAVPAY">
-            N
+            SA
           </span>
         )}
       </div>
